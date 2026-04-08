@@ -14,9 +14,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '400', // Daha ince (Thin/Regular)
+    fontWeight: '500', // Daha ince (Thin/Regular)
     color: '#1976D2',  // Kurumsal mavi
     letterSpacing: 1,
+    marginBottom: 5, // Başlık ile liste arasına biraz boşluk
   },
 });
 

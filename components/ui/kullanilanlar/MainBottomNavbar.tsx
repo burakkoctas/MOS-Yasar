@@ -1,49 +1,32 @@
 import { Ionicons } from '@expo/vector-icons';
+import { usePathname, useRouter } from 'expo-router'; // usePathname ekledik
 import React from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
-// Profesyonel Tip Tanımlaması
-interface NavItem {
-  id: string;
-  label: string;
-  iconName: keyof typeof Ionicons.glyphMap;
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { id: 'list', label: 'Talep Listesi', iconName: 'list-outline' },
-  { id: 'past', label: 'Geçmiş Talepler', iconName: 'time-outline' },
-  { id: 'settings', label: 'Ayarlar', iconName: 'settings-outline' },
+const NAV_ITEMS = [
+  { id: 'list', label: 'Talep Listesi', iconName: 'list-outline', path: '/' },
+  { id: 'past', label: 'Geçmiş Talepler', iconName: 'time-outline', path: '/past-requests' },
+  { id: 'settings', label: 'Ayarlar', iconName: 'settings-outline', path: '/settings' },
 ];
 
-interface NavbarProps {
-  activeTabId: string;
-  onTabChange: (tabId: string) => void;
-}
-
-const MainBottomNavbar: React.FC<NavbarProps> = ({ activeTabId, onTabChange }) => {
-  const corporateBlue = '#1976D2'; // Talep numaralarındaki kurumsal mavi
-  const inactiveGrey = '#A0A0A0';   // Silik gri
+const MainBottomNavbar = () => {
+  const router = useRouter();
+  const pathname = usePathname(); // Şu anki aktif yolu (URL) verir
 
   return (
     <View style={styles.navbarContainer}>
       {NAV_ITEMS.map((item) => {
-        const isSelected = activeTabId === item.id;
-        const currentColor = isSelected ? corporateBlue : inactiveGrey;
+        // Renk kontrolü: URL ile path eşleşiyor mu?
+        const isSelected = pathname === item.path;
+        const currentColor = isSelected ? '#1976D2' : '#A0A0A0';
 
         return (
           <Pressable 
             key={item.id} 
             style={styles.navItemButton} 
-            onPress={() => onTabChange(item.id)}
+            onPress={() => router.replace(item.path as any)} // push yerine replace bazen daha akıcıdır
           >
-            {/* İkon - Boyutları tarifine uygun olarak eşitledik */}
-            <Ionicons 
-              name={item.iconName} 
-              size={24} 
-              color={currentColor} 
-            />
-            
-            {/* Yazı - İnce (font-weight 300) ve ortalanmış */}
+            <Ionicons name={item.iconName as any} size={24} color={currentColor} />
             <Text style={[styles.navLabel, { color: currentColor }]}>
               {item.label}
             </Text>
@@ -53,6 +36,8 @@ const MainBottomNavbar: React.FC<NavbarProps> = ({ activeTabId, onTabChange }) =
     </View>
   );
 };
+
+// ... stiller aynı ...
 
 const styles = StyleSheet.create({
   navbarContainer: {

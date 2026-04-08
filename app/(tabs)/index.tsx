@@ -1,80 +1,64 @@
-import React, { useMemo, useState } from 'react';
-import { LayoutAnimation, StyleSheet, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
+import { LayoutAnimation, StyleSheet, Text, View } from 'react-native';
 import FilteredList from '../../components/ui/kullanilanlar/FilteredList';
-import ListHeader from '../../components/ui/kullanilanlar/ListHeader';
-import TopFilterBar from '../../components/ui/kullanilanlar/TopFilterBar';
+import RequestListFilterBar from '../../components/ui/kullanilanlar/RequestListFilterBar';
 import { DUMMY_DATA } from '../constants/data';
-import MainBottomNavbar from './MainBottomNavbar';
 
 export default function RequestListScreen() {
-  // State tanımlamaları açıklayıcı isimlerle güncellendi
+  const router = useRouter();
   const [activeCategoryTitle, setActiveCategoryTitle] = useState<string | null>(null);
   const [searchFilterKeyword, setSearchFilterKeyword] = useState('');
 
-  // Kategori açma/kapama mantığı
+  // Sayfaya her geri dönüldüğünde her şeyi sıfırla
+  useFocusEffect(
+    useCallback(() => {
+      setActiveCategoryTitle(null);
+      setSearchFilterKeyword('');
+      // Seçim state'lerin varsa burada sıfırlayabilirsin
+    }, [])
+  );
+
   const handleCategoryToggle = (selectedTitle: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setActiveCategoryTitle(previousTitle => 
-      previousTitle === selectedTitle ? null : selectedTitle
-    );
+    setActiveCategoryTitle(prev => prev === selectedTitle ? null : selectedTitle);
   };
 
-  // Arama metni değiştiğinde çalışacak fonksiyon
-  const handleSearchInputChange = (text: string) => {
-    setSearchFilterKeyword(text.toLowerCase());
-  };
-
-  /**
-   * BACKEND NOTU:
-   * // TODO: Bu kompleks filtreleme işlemi backend (API) tarafında yapılmalı. 
-   * // Client tarafında büyük verilerle çalışmak performans sorunlarına yol açar.
-   */
   const processedFilteredData = useMemo(() => {
     return DUMMY_DATA.map(categoryGroup => {
-      // Grup içindeki her bir talebi (request) kontrol ediyoruz
       const matchedRequests = categoryGroup.data.filter(requestItem => {
-        // Talebin içindeki tüm değerleri (stringleştirerek) arama kelimesiyle kıyaslıyoruz
-        const requestDataValues = Object.values(requestItem).map(value => String(value).toLowerCase());
-        return requestDataValues.some(valueString => valueString.includes(searchFilterKeyword));
+        const requestValues = Object.values(requestItem).map(val => String(val).toLowerCase());
+        return requestValues.some(valStr => valStr.includes(searchFilterKeyword.toLowerCase()));
       });
-
-      // Kategori başlığı arama kelimesini içeriyor mu?
-      const isCategoryTitleMatch = categoryGroup.category.toLowerCase().includes(searchFilterKeyword);
-
-      // Eğer kategori başlığı eşleşiyorsa grubu tam göster, yoksa sadece eşleşen talepleri göster
-      if (isCategoryTitleMatch) {
-        return categoryGroup;
-      } else if (matchedRequests.length > 0) {
-        return { ...categoryGroup, data: matchedRequests };
-      }
-      
+      const isTitleMatch = categoryGroup.category.toLowerCase().includes(searchFilterKeyword.toLowerCase());
+      if (isTitleMatch) return categoryGroup;
+      if (matchedRequests.length > 0) return { ...categoryGroup, data: matchedRequests };
       return null;
-    }).filter((group): group is any => group !== null); // Boş (null) grupları listeden temizle
+    }).filter((group): group is any => group !== null);
   }, [searchFilterKeyword]);
 
   return (
-    <View style={styles.screenContainer}>
-      <TopFilterBar onSearch={handleSearchInputChange} />
+    <View style={styles.container}>
+      <RequestListFilterBar onSearch={setSearchFilterKeyword} />
       
-      <ListHeader />
-      
+      <View style={styles.headerContainer}>
+        <Text style={styles.listTitle}>Talep Listesi</Text>
+        <View style={styles.spacingPlaceholder} />
+      </View>
+
       <FilteredList 
         data={processedFilteredData} 
         openCategory={activeCategoryTitle} 
-        onToggle={handleCategoryToggle} 
+        onToggle={handleCategoryToggle}
+        onDetailsPress={() => router.push('/request-detail')}
       />
-      <MainBottomNavbar 
-      activeTabId="list" // Şimdilik statik, ileride state'e bağlanır
-      onTabChange={(id) => console.log("Sekme Değişti:", id)} 
-    />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screenContainer: { 
-    flex: 1, 
-    backgroundColor: '#fff', 
-    padding: 15 
-  },
+  container: { flex: 1, backgroundColor: '#fff', padding: 15 },
+  headerContainer: { marginVertical: 15, alignItems: 'center' },
+  listTitle: { fontSize: 18, fontWeight: '400', color: '#1976D2', letterSpacing: 1 },
+  spacingPlaceholder: { height: 19, width: '100%' }
 });

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "MOS-Yasar",
-    "slug": "MOS-Yasar",
+    "slug": "burak-n4t4bpsvklvzbykdov0ul",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.burakkoctas.burakn4t4bpsvklvzbykdov0ul"
     },
     "web": {
       "output": "static",
@@ -43,6 +44,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e4b2e8ee-1c96-4c07-93bf-8a9a25b1fc62"
+      }
+    },
+    "owner": "burakkoctas"
   }
 }

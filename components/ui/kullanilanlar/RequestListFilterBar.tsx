@@ -2,11 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-export default function TopFilterBar({ onSearch }) {
+interface RequestListFilterBarProps {
+  onSearch: (text: string) => void;
+}
+
+export default function RequestListFilterBar({ onSearch }: RequestListFilterBarProps) {
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null); // Kesinleşmiş filtre
-  const [tempSelected, setTempSelected] = useState(null); // Modal içindeki geçici seçim
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [tempSelected, setTempSelected] = useState<string | null>(null);
 
   // Bugünün günü (Takvim yaprağı için)
   const todayDay = new Date().getDate();

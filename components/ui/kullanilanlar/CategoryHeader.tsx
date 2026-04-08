@@ -1,7 +1,27 @@
 import Checkbox from 'expo-checkbox';
+import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-export default function CategoryHeader({ title, count, expanded, onToggle, isAllSelected, onSelectAll }) {
+// 1. Proplar için Interface tanımlıyoruz
+interface CategoryHeaderProps {
+  title: string;
+  count: number;
+  expanded: boolean;
+  onToggle: () => void;
+  isAllSelected: boolean;
+  onSelectAll: (value: boolean) => void;
+}
+
+// 2. Bileşeni React.FC veya doğrudan fonksiyon tipiyle tanımlıyoruz
+export default function CategoryHeader({ 
+  title, 
+  count, 
+  expanded, 
+  onToggle, 
+  isAllSelected, 
+  onSelectAll 
+}: CategoryHeaderProps) {
+  
   return (
     <View style={[styles.header, expanded ? styles.headerActive : styles.headerInactive]}>
       {/* Tıklanabilir Sol Alan */}
@@ -38,15 +58,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3, 
-    marginHorizontal:10
+    marginHorizontal: 10
   },
   headerInactive: { backgroundColor: '#f2f2f2' },
-  headerActive: { backgroundColor: '#E3F2FD', borderWidth: 1, borderColor: '#BBDEFB' },
+  headerActive: { 
+    backgroundColor: '#E3F2FD', 
+    borderWidth: 1, 
+    borderColor: '#BBDEFB' 
+  },
   clickableArea: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 12, // Bir tık daralttım, 20 çok geniş durabilir
     paddingLeft: 15, 
   },
   countCircle: {
@@ -58,8 +82,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  countText: { fontSize: 28, fontWeight: 'bold', color: '#1976D2' },
-  title: { fontSize: 25, fontWeight: '600', color: '#000000', marginLeft: 10 },
+  countText: { fontSize: 18, fontWeight: 'bold', color: '#1976D2' }, // Yazı boyutu dengelendi
+  title: { fontSize: 16, fontWeight: '600', color: '#000000', marginLeft: 10 },
   titleActive: { color: '#1976D2' },
   rightContent: {
     paddingVertical: 10,
