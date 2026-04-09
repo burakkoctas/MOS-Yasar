@@ -1,4 +1,4 @@
-import MainBottomNavbar from '@/components/ui/kullanilanlar/MainBottomNavbar';
+import MainBottomNavbar from '@/src/shared/components/ui/MainBottomNavbar';
 import { Slot } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 

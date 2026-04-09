@@ -1,4 +1,4 @@
-import AppLoader from '@/components/ui/kullanilanlar/AppLoader';
+import AppLoader from '@/src/shared/components/ui/AppLoader';
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';

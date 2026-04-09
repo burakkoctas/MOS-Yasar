@@ -1,7 +1,7 @@
 import Checkbox from 'expo-checkbox';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import StatusBadge from './StatusBadge';
+import StatusBadge from './StatusBadge.js';
 
 interface HeaderProps {
   statusLabel: string;
