@@ -1,86 +1,64 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import CategoryHeader from './CategoryHeader';
 import RequestItem from './RequestItem';
 
 interface AccordionCategoryProps {
+  index: number; 
   title: string;
   requests: any[];
   expanded: boolean;
   onToggle: () => void;
   onDetailsPress: (item: any) => void;
-  index: number;
-  // Backend geldiğinde yönetilecek proplar
-  isAllSelected: boolean;
-  onSelectAll: (value: boolean) => void;
+  selectedIds: string[];
+  onSelect: (id: string, isSelected: boolean) => void;
 }
 
 export default function AccordionCategory({ 
-  title, 
-  requests, 
-  expanded, 
-  onToggle, 
-  onDetailsPress, 
-  index,
-  isAllSelected,
-  onSelectAll
+  index, title, requests = [], expanded, onToggle, onDetailsPress, selectedIds, onSelect 
 }: AccordionCategoryProps) {
   
-  // Stagger Animation (Kademeli Giriş) Değerleri
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateYAnim = useRef(new Animated.Value(20)).current;
+  // Kategori bazlı ID listesi
+  const categoryIds = requests.map(r => r.id);
+  
+  // Kategorideki her şey seçili mi kontrolü
+  const isAllSelected = categoryIds.length > 0 && categoryIds.every(id => selectedIds.includes(id));
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        delay: index * 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateYAnim, {
-        toValue: 0,
-        duration: 500,
-        delay: index * 100,
-        useNativeDriver: true,
-      })
-    ]).start();
-  }, []);
+  // Kategori Header'ına basıldığında toplu seçim
+  const handleToggleCategory = (value: boolean) => {
+    requests.forEach(req => onSelect(req.id, value));
+  };
 
   return (
-    <Animated.View style={[
-      styles.categoryContainer, 
-      { opacity: fadeAnim, transform: [{ translateY: translateYAnim }] }
-    ]}>
+    <View style={styles.categoryContainer}>
       <CategoryHeader 
         title={title}
-        count={requests?.length || 0}
+        count={requests.length}
         expanded={expanded}
         onToggle={onToggle}
         isAllSelected={isAllSelected}
-        onSelectAll={onSelectAll}
+        onSelectAll={handleToggleCategory}
       />
 
       {expanded && (
         <View style={styles.itemsList}>
-          {requests?.map((singleRequest) => (
+          {requests.map((req) => (
             <RequestItem 
-              key={singleRequest.id} 
-              requestData={singleRequest}
+              key={req.id} 
+              requestData={req}
               onItemPress={onDetailsPress}
-              isItemForceSelected={isAllSelected} // Header seçiliyse item'lar da seçili gözüksün
+              isSelected={selectedIds.includes(req.id)}
+              // HATA BURADAYDI! Artık fonksiyonu aracı kullanmadan direkt paslıyoruz:
+              onSelect={onSelect} 
             />
           ))}
         </View>
       )}
-    </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   categoryContainer: { marginBottom: 12 },
-  itemsList: { 
-    paddingTop: 10,
-    paddingHorizontal: 5 
-  }
+  itemsList: { paddingTop: 10, paddingHorizontal: 5 }
 });

@@ -1,33 +1,32 @@
 import Checkbox from 'expo-checkbox';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import StatusBadge from './StatusBadge';
 
 interface HeaderProps {
   statusLabel: string;
-  isInitiallySelected: boolean;
+  isSelected: boolean; // State artık yukarıdan geliyor
+  onSelect: (value: boolean) => void;
 }
 
-const RequestCardHeader: React.FC<HeaderProps> = ({ statusLabel, isInitiallySelected }) => {
-  const [isSelected, setIsSelected] = useState(false);
-
-  useEffect(() => {
-    setIsSelected(isInitiallySelected);
-  }, [isInitiallySelected]);
-
+const RequestCardHeader: React.FC<HeaderProps> = ({ statusLabel, isSelected, onSelect }) => {
   return (
     <View style={styles.headerContainer}>
       <View style={styles.badgeWrapper}>
         <StatusBadge status={statusLabel} fullWidth={true} />
       </View>
-      <View style={styles.checkboxWrapper}>
+
+      <Pressable 
+        style={styles.checkboxWrapper}
+        onPress={(e) => e.stopPropagation()} // Karta tıklamayı engeller
+      >
         <Checkbox
           value={isSelected}
-          onValueChange={setIsSelected}
+          onValueChange={onSelect}
           color={isSelected ? '#1976D2' : undefined}
           style={styles.checkbox}
         />
-      </View>
+      </Pressable>
     </View>
   );
 };
@@ -40,9 +39,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingRight: 15,
     height: 30,
+    zIndex: 10,
   },
-  badgeWrapper: { position: 'absolute', left: '10%', width: '80%' },
-  checkboxWrapper: { zIndex: 1 },
+  badgeWrapper: { position: 'absolute', left: '10%', width: '80%', pointerEvents: 'none' },
+  checkboxWrapper: { padding: 10, marginRight: -10, zIndex: 20 },
   checkbox: { width: 20, height: 20, borderRadius: 4 },
 });
 

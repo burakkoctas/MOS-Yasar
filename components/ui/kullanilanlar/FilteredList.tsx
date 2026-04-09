@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import AccordionCategory from './AccordionCategory';
 
 interface FilteredListProps {
@@ -7,62 +7,43 @@ interface FilteredListProps {
   openCategory: string | null;
   onToggle: (title: string) => void;
   onDetailsPress: (item: any) => void;
+  selectedIds: string[];
+  onSelect: (id: string, isSelected: boolean) => void;
 }
 
 const FilteredList: React.FC<FilteredListProps> = ({ 
   data, 
   openCategory, 
   onToggle, 
-  onDetailsPress 
+  onDetailsPress, 
+  selectedIds, 
+  onSelect 
 }) => {
-
-  // Kayıt bulunamadı durumu (EmptyState)
-  if (!data || data.length === 0) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Eşleşen kayıt bulunamadı.</Text>
-      </View>
-    );
-  }
-
   return (
     <ScrollView showsVerticalScrollIndicator={false} style={styles.list}>
-      {data.map((group, index) => (
+      {data.map((group, idx) => (
         <AccordionCategory 
-          key={group.category || index} 
-          index={index}
+          key={group.category || idx} 
+          index={idx} // Artık AccordionCategory bunu tanıyor
           title={group.category} 
-          requests={group.data} 
+          requests={group.data || []} // undefined hatasına karşı koruma
           expanded={openCategory === group.category} 
           onToggle={() => onToggle(group.category)}
           onDetailsPress={onDetailsPress}
-          
-          // BACKEND NOTU: Şimdilik statik false, ileride state'den gelecek
-          isAllSelected={false} 
-          onSelectAll={(val) => {
-            console.log(`${group.category} grubu için seçim durumu: ${val}`);
-          }}
+          selectedIds={selectedIds}
+          onSelect={onSelect}
         />
       ))}
-      {/* ScrollView altında boşluk (Navbar'a çarpmasın diye) */}
-      <View style={{ height: 30 }} />
+      {/* Drawer ve FAB kapattığında içerik altında kalmasın diye boşluk */}
+      <View style={{ height: 120 }} />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  list: { flex: 1 },
-  emptyContainer: { 
-    marginTop: 60, 
-    alignItems: 'center',
-    paddingHorizontal: 20 
-  },
-  emptyText: { 
-    color: '#999', 
-    fontSize: 14, 
-    fontStyle: 'italic',
-    textAlign: 'center' 
-  },
+  list: { 
+    flex: 1 
+  }
 });
 
 export default FilteredList;

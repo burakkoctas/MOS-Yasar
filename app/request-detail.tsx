@@ -1,14 +1,24 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ActionDrawer from '../components/ui/kullanilanlar/ActionDrawer';
 
 export default function RequestDetailScreen() {
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+
   const dummyDetail = {
-    isim: "Ahmet Yılmaz", tarih: "08 Nis 2026", belgeNo: "BEL-2026-001",
-    sirket: "Cevher Jant Sanayii A.Ş.", statu: "Yönetici Onayında",
-    istekNo: "REQ-9982", acilis: "05.04.2026", bitis: "10.04.2026",
-    modul: "SAP FI", kategori: "Yetki Talebi",
+    id: "REQ-9982",
+    isim: "Ahmet Yılmaz",
+    tarih: "08 Nis 2026",
+    belgeNo: "BEL-2026-001",
+    sirket: "Cevher Jant Sanayii A.Ş.",
+    statu: "Yönetici Onayında",
+    istekNo: "REQ-9982",
+    acilis: "05.04.2026",
+    bitis: "10.04.2026",
+    modul: "SAP FI",
+    kategori: "Yetki Talebi",
     aciklama: "Kullanıcının SAP FI modülünde masraf merkezi raporlarına erişim yetkisi tanımlanması gerekmektedir.",
   };
 
@@ -21,10 +31,39 @@ export default function RequestDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: "Talep Onay", headerBackTitle: "Geri" }} />
+      {/* ŞEFİM, BARIN ÇAKILI KALMASI İÇİN AYARLAR BURADA */}
+      <Stack.Screen 
+        options={{ 
+          title: "Talep Onay", 
+          headerBackTitle: "Geri",
+          headerTransparent: false, // Çakılı kalması için false yaptık
+          headerShadowVisible: false, // Alt çizgiyi/gölgeyi sildik, sayfa ile bütünleşti
+          headerStyle: { 
+            backgroundColor: '#FAFAFA', // Sayfa zemini ile aynı renk yaparak "yokmuş" hissi verdik
+          },
+          headerTintColor: '#1976D2', 
+          headerTitleStyle: { 
+            fontWeight: 'bold',
+            color: '#1976D2'
+          },
+          headerRight: () => (
+            <Pressable 
+              onPress={() => setIsDeleteModalVisible(true)} 
+              style={({ pressed }) => ({
+                opacity: pressed ? 0.5 : 1,
+                marginRight: 15,
+              })}
+            >
+              <Ionicons name="trash-outline" size={24} color="#1976D2" />
+            </Pressable>
+          ),
+        }} 
+      />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.statusBar}>
           <Text style={styles.statusText}>{dummyDetail.statu}</Text>
         </View>
@@ -33,7 +72,6 @@ export default function RequestDetailScreen() {
           <Text style={styles.nameText}>{dummyDetail.isim}</Text>
           <Text style={styles.dateText}>{dummyDetail.tarih}</Text>
         </View>
-        
         <Text style={styles.belgeNoText}>Belge No: {dummyDetail.belgeNo}</Text>
 
         <Text style={styles.sectionTitle}>Feniks Sap Uygulamaları</Text>
@@ -59,14 +97,12 @@ export default function RequestDetailScreen() {
           <InfoRow label="Grubu" value="Mali İşler" />
           <InfoRow label="Yöneticisi" value="Mehmet Demir" />
           <InfoRow label="Bölgesi" value="Merkez" />
-          <InfoRow label="İsteği Açan" value="Ayşe Kaya" />
-          <InfoRow label="Sorumlu Uzman" value="Ali Veli" />
         </View>
 
         <Text style={styles.sectionTitle}>Onay Tarihçesi</Text>
         <View style={styles.sectionCard}>
-          <Text style={styles.historyText}>1. Onaylayan Yönetici: Mehmet Demir (Onaylandı)</Text>
-          <Text style={styles.historyText}>2. Onaylayan Yönetici: Bekliyor...</Text>
+          <Text style={styles.historyText}>• 1. Onaylayan: Mehmet Demir (Onaylandı)</Text>
+          <Text style={styles.historyText}>• 2. Onaylayan: Bekliyor...</Text>
         </View>
 
         <Text style={styles.sectionTitle}>İstek Notları</Text>
@@ -75,31 +111,56 @@ export default function RequestDetailScreen() {
           <Text style={styles.noteText}>İlgili yetki formu ektedir, işlemler başlatıldı.</Text>
         </View>
         
-        {/* En altta FAB için geniş boşluk */}
-        <View style={{ height: 100 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* YENİ NESİL AKILLI DRAWER VE FAB BİLEŞENİ */}
+      {/* MODAL SİSTEMİ */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isDeleteModalVisible}
+        onRequestClose={() => setIsDeleteModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>Uyarı</Text>
+            <Text style={styles.modalContentText}>
+              İstek yalnızca talep listenizden kaldırılacak, Talep eden sisteme <Text style={{ fontWeight: 'bold' }}>iletilmeyecektir.</Text> Emin misiniz?
+            </Text>
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity style={styles.modalButton} onPress={() => setIsDeleteModalVisible(false)}>
+                <Text style={styles.buttonTextDefault}>HAYIR</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalButton} onPress={() => setIsDeleteModalVisible(false)}>
+                <Text style={styles.buttonTextBold}>EVET</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <ActionDrawer 
-        onApprove={() => console.log("Onaylandı!")}
-        onReject={() => console.log("Reddedildi!")}
+        selectedIds={[dummyDetail.id]} 
+        onActionComplete={() => console.log("Bitti")} 
       />
     </View>
   );
 }
 
-// Stiller aynı kalıyor (sadece sayfa tasarımı)
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
-  scrollContent: { padding: 20 },
-  statusBar: { width: '80%', alignSelf: 'center', backgroundColor: '#FFF3E0', paddingVertical: 8, borderRadius: 20, alignItems: 'center', marginBottom: 20, borderWidth: 1, borderColor: '#FFE0B2' },
+  scrollContent: { 
+    padding: 20, 
+    paddingTop: 10 // Bar şeffaf değil, o yüzden artık büyük paddinge gerek yok
+  },
+  statusBar: { width: '80%', alignSelf: 'center', backgroundColor: '#FFF3E0', paddingVertical: 8, borderRadius: 20, alignItems: 'center', marginBottom: 25, borderWidth: 1, borderColor: '#FFE0B2' },
   statusText: { color: '#E65100', fontWeight: 'bold', fontSize: 14 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
-  nameText: { fontSize: 20, fontWeight: 'bold', color: '#333' },
+  nameText: { fontSize: 22, fontWeight: 'bold', color: '#333' },
   dateText: { fontSize: 14, color: '#666' },
   belgeNoText: { fontSize: 14, color: '#888', marginBottom: 20 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1976D2', marginBottom: 10, marginTop: 10 },
-  sectionCard: { backgroundColor: '#fff', borderRadius: 12, padding: 15, marginBottom: 15, borderWidth: 1, borderColor: '#EBEBEB', elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
+  sectionCard: { backgroundColor: '#fff', borderRadius: 12, padding: 15, marginBottom: 15, borderWidth: 1, borderColor: '#EBEBEB', elevation: 1 },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 0.5, borderBottomColor: '#F5F5F5' },
   infoLabel: { fontSize: 14, color: '#666', flex: 1 },
   infoValue: { fontSize: 14, color: '#333', fontWeight: '500', flex: 1, textAlign: 'right' },
@@ -108,4 +169,12 @@ const styles = StyleSheet.create({
   noteName: { fontSize: 14, fontWeight: 'bold', color: '#333' },
   noteDate: { fontWeight: 'normal', color: '#888', fontSize: 12 },
   noteText: { fontSize: 14, color: '#555', marginTop: 5, fontStyle: 'italic' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
+  modalView: { width: '85%', backgroundColor: 'white', borderRadius: 25, padding: 25, alignItems: 'center', elevation: 5 },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#1976D2', marginBottom: 15 },
+  modalContentText: { fontSize: 15, textAlign: 'center', color: '#1976D2', lineHeight: 22, marginBottom: 25 },
+  modalButtonContainer: { flexDirection: 'row', justifyContent: 'space-around', width: '100%', borderTopWidth: 0.5, borderTopColor: '#E0E0E0', paddingTop: 15 },
+  modalButton: { paddingHorizontal: 20, paddingVertical: 5 },
+  buttonTextDefault: { color: '#1976D2', fontSize: 16 },
+  buttonTextBold: { color: '#1976D2', fontSize: 16, fontWeight: 'bold' },
 });

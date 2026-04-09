@@ -7,25 +7,28 @@ import RequestCardInfo from './RequestCardInfo';
 interface RequestItemProps {
   requestData: any;
   onItemPress: (item: any) => void;
-  isItemForceSelected: boolean;
+  isSelected: boolean;
+  // Hatanın çözümü burada: Fonksiyon imzasını (id, isSelected) olarak güncelledik
+  onSelect: (id: string, isSelected: boolean) => void; 
 }
 
 const RequestItem: React.FC<RequestItemProps> = ({ 
   requestData, 
   onItemPress, 
-  isItemForceSelected 
+  isSelected,
+  onSelect 
 }) => {
   
-  // PROFESYONEL ÖNLEM: Veri yoksa boş dön, hatayı engelle
   if (!requestData) return null;
 
   return (
     <Pressable style={styles.cardContainer} onPress={() => onItemPress(requestData)}>
       
-      {/* Verilerin varlığını garanti altına alarak gönderiyoruz */}
       <RequestCardHeader 
         statusLabel={requestData.onayDurumu || 'Bekliyor'} 
-        isInitiallySelected={isItemForceSelected} 
+        isSelected={isSelected} 
+        // Burada id'yi zaten requestData içinden biliyoruz, onu paslıyoruz
+        onSelect={(val: boolean) => onSelect(requestData.id, val)}
       />
 
       <RequestCardInfo 
@@ -55,6 +58,10 @@ const styles = StyleSheet.create({
     borderWidth: 1, 
     borderColor: '#e0e0e0',
     elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   }
 });
 

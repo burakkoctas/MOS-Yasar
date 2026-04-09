@@ -1,64 +1,106 @@
+import RequestFilterBar from '@/components/ui/kullanilanlar/RequestFİlterBar';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { LayoutAnimation, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import ActionDrawer from '../../components/ui/kullanilanlar/ActionDrawer';
 import FilteredList from '../../components/ui/kullanilanlar/FilteredList';
-import RequestListFilterBar from '../../components/ui/kullanilanlar/RequestListFilterBar';
 import { DUMMY_DATA } from '../constants/data';
 
 export default function RequestListScreen() {
   const router = useRouter();
   const [activeCategoryTitle, setActiveCategoryTitle] = useState<string | null>(null);
   const [searchFilterKeyword, setSearchFilterKeyword] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Sayfaya her geri dönüldüğünde her şeyi sıfırla
+  // Sayfaya her odaklanıldığında seçimleri ve aramayı temizle
   useFocusEffect(
     useCallback(() => {
       setActiveCategoryTitle(null);
       setSearchFilterKeyword('');
-      // Seçim state'lerin varsa burada sıfırlayabilirsin
+      setSelectedIds([]);
     }, [])
   );
 
-  const handleCategoryToggle = (selectedTitle: string) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setActiveCategoryTitle(prev => prev === selectedTitle ? null : selectedTitle);
-  };
-
+  // Arama filtresi mantığı
   const processedFilteredData = useMemo(() => {
+    if (!DUMMY_DATA) return [];
     return DUMMY_DATA.map(categoryGroup => {
-      const matchedRequests = categoryGroup.data.filter(requestItem => {
-        const requestValues = Object.values(requestItem).map(val => String(val).toLowerCase());
-        return requestValues.some(valStr => valStr.includes(searchFilterKeyword.toLowerCase()));
+      const items = categoryGroup.data || [];
+      const matchedRequests = items.filter(requestItem => {
+        return Object.values(requestItem).some(val =>
+          String(val).toLowerCase().includes(searchFilterKeyword.toLowerCase())
+        );
       });
-      const isTitleMatch = categoryGroup.category.toLowerCase().includes(searchFilterKeyword.toLowerCase());
-      if (isTitleMatch) return categoryGroup;
-      if (matchedRequests.length > 0) return { ...categoryGroup, data: matchedRequests };
+      if (categoryGroup.category.toLowerCase().includes(searchFilterKeyword.toLowerCase()) || matchedRequests.length > 0) {
+        return { ...categoryGroup, data: matchedRequests };
+      }
       return null;
-    }).filter((group): group is any => group !== null);
+    }).filter(Boolean);
   }, [searchFilterKeyword]);
 
   return (
     <View style={styles.container}>
-      <RequestListFilterBar onSearch={setSearchFilterKeyword} />
-      
+      {/* ÜST ARAMA BARI */}
+      <RequestFilterBar
+        onSearch={setSearchFilterKeyword}
+        onDatePress={() => {
+          // Şefim burada Modal içinde Radio Button listesi tetiklenecek
+          console.log("Hızlı tarih seçim listesi açılıyor...");
+        }}
+      />
+
+      {/* BAŞLIK ALANI (Geçmiş Talepler sayfasıyla hizalı) */}
       <View style={styles.headerContainer}>
-        <Text style={styles.listTitle}>Talep Listesi</Text>
+        <Text style={styles.title}>Talep Listesi</Text>
         <View style={styles.spacingPlaceholder} />
       </View>
 
-      <FilteredList 
-        data={processedFilteredData} 
-        openCategory={activeCategoryTitle} 
-        onToggle={handleCategoryToggle}
-        onDetailsPress={() => router.push('/request-detail')}
+      {/* ANA LİSTE */}
+      <FilteredList
+        data={processedFilteredData}
+        selectedIds={selectedIds}
+        onSelect={(id, val) => {
+          setSelectedIds(prev => val ? [...prev, id] : prev.filter(x => x !== id));
+        }}
+        openCategory={activeCategoryTitle}
+
+        // ŞEFİM, İSTEDİĞİN "TIKLA AÇ / TIKLA KAPAT" MANTIĞI BURADA:
+        onToggle={(categoryTitle) => {
+          setActiveCategoryTitle(prev => prev === categoryTitle ? null : categoryTitle);
+        }}
+
+        onDetailsPress={(item) => {
+          router.push('/request-detail');
+        }}
+      />
+
+      {/* ALT ONAY ÇEKMECESİ VE DÖNEN FAB */}
+      <ActionDrawer
+        selectedIds={selectedIds}
+        onActionComplete={() => setSelectedIds([])}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 15 },
-  headerContainer: { marginVertical: 15, alignItems: 'center' },
-  listTitle: { fontSize: 18, fontWeight: '400', color: '#1976D2', letterSpacing: 1 },
-  spacingPlaceholder: { height: 19, width: '100%' }
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 15
+  },
+  headerContainer: {
+    alignItems: 'center',
+    marginTop: 15,
+    marginBottom: 15
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#1976D2',
+    letterSpacing: 1
+  },
+  spacingPlaceholder: {
+    height: 23 // Geçmiş taleplerdeki tarih yazısının boşluğunu simüle eder
+  },
 });

@@ -1,85 +1,86 @@
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import DateRangePickerModal from './DateRangePickerModal';
+import { Feather, Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-interface PastRequestFilterBarProps {
-    onSearch: (text: string) => void;
-    onDateRangeSelect: (range: string) => void; // Seçilen aralığı üst sayfaya bildirir
+interface FilterBarProps {
+  onSearch: (text: string) => void;
+  onDatePress?: () => void; // Talep listesinde gerekirse opsiyonel
 }
 
-const PastRequestFilterBar: React.FC<PastRequestFilterBarProps> = ({
-    onSearch,
-    onDateRangeSelect
-}) => {
-    const [searchText, setSearchText] = useState('');
-    const [isRangePickerVisible, setIsRangePickerVisible] = useState(false);
-    const handleTextChange = (text: string) => {
-        setSearchText(text); // Kendi içindeki state'i günceller (görsel için)
-        onSearch(text);      // Üst sayfaya (past-requests.tsx) haberi uçurur
-    };
-    // BUGÜNÜN GÜNÜ (Takvim yaprağı ikonu için)
-    const todayDay = new Date().getDate();
+export default function FilterBar({ onSearch, onDatePress }: FilterBarProps) {
+  const todayDay = new Date().getDate();
 
-    return (
-        <View style={styles.container}>
-            {/* PAYLAŞILAN ATOM: ARAMA KUTUSU */}
-            <View style={styles.searchContainer}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Arama kriteri giriniz"
-                    placeholderTextColor="#1976D2"
-                    value={searchText}
-                    onChangeText={handleTextChange}
-                />
-            </View>
+  return (
+    <View style={styles.container}>
+      {/* ARAMA ÇUBUĞU */}
+      <View style={styles.searchSection}>
+        <Ionicons name="search" size={20} color="#1976D2" style={styles.searchIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Arama kriteri giriniz."
+          placeholderTextColor="#1976D2" // Mavi placeholder
+          onChangeText={onSearch}
+          selectionColor="#1976D2" // Yazma imleci mavi
+        />
+      </View>
 
-            {/* GEÇMİŞE ÖZEL TAKVİM BUTONU */}
-            <Pressable
-                style={styles.calendarButton}
-                onPress={() => setIsRangePickerVisible(true)}
-            >
-                <View style={styles.calendarHeader} />
-                <View style={styles.calendarBody}>
-                    <Text style={styles.calendarText}>{todayDay}</Text>
-                </View>
-            </Pressable>
-
-            {/* GEÇMİŞE ÖZEL RANGE PICKER MODAL */}
-            <DateRangePickerModal
-                visible={isRangePickerVisible}
-                onClose={() => setIsRangePickerVisible(false)}
-                onSave={(range) => {
-                    onDateRangeSelect(range);
-                    setIsRangePickerVisible(false);
-                }}
-            />
+      {/* TAKVİM (Sağdan ve Soldan Eşit Dengelenmiş) */}
+      <TouchableOpacity style={styles.dateButton} onPress={onDatePress}>
+        <View style={styles.iconWrapper}>
+          <Feather name="calendar" size={40} color="#1976D2" />
+          <Text style={styles.dayText}>{todayDay}</Text>
         </View>
-    );
-};
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
-    container: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
-    searchContainer: {
-        flex: 1,
-        flexDirection: 'row',
-        backgroundColor: '#F2F2F2',
-        borderRadius: 10,
-        paddingHorizontal: 12,
-        height: 45,
-        alignItems: 'center'
-    },
-    input: { flex: 1, color: '#1976D2', fontSize: 14, fontWeight: '400' },
-    calendarButton: {
-        width: 40, height: 40, backgroundColor: '#fff', borderRadius: 8,
-        borderWidth: 1.5, borderColor: '#1976D2', overflow: 'hidden', marginLeft: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 3,
-    },
-    calendarHeader: { height: 12, backgroundColor: '#1976D2' },
-    calendarBody: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    calendarText: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10, // Kenarlardan nefes payı
+    marginBottom: 10,
+    gap: 12, // Takvim ve arama kutusu arasındaki dengeli boşluk
+  },
+  searchSection: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F0F0',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 50, // Takvim yüksekliğiyle (40 ikon + padding) eşitlendi
+    borderWidth: 1.5, // Takvimin "çizgi" ağırlığıyla uyum sağlaması için
+    borderColor: 'transparent',
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1976D2', // Girilen metin mavi
+    fontWeight: '500',
+  },
+  dateButton: {
+    // Takvim artık hem sağdan hem soldan (gap sayesinde) eşit boşluğa sahip
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 5,
+  },
+  iconWrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  dayText: {
+    position: 'absolute',
+    top: 17, 
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1976D2',
+    textAlign: 'center',
+    includeFontPadding: false,
+  },
 });
-
-export default PastRequestFilterBar;
