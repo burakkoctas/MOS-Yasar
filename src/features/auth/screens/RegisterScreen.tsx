@@ -1,5 +1,6 @@
 // Path: src/features/auth/screens/RegisterScreen.tsx
 import CustomFabIcon from '@/src/shared/components/ui/CustomFabIcon';
+import YasarBilgiLogo from '@/src/shared/components/ui/YasarBilgiLogo';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -16,30 +17,30 @@ import {
 
 export default function RegisterScreen() {
   const router = useRouter();
-  
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
 
   const handleRegister = () => {
     console.log("Kayıt olunuyor:", { firstName, lastName, email });
-    router.back(); 
+    router.back();
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
+    <KeyboardAvoidingView
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <Stack.Screen 
-        options={{ 
-          headerShown: true, 
-          headerTitle: "", 
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          headerTitle: "",
           headerTransparent: false,
           headerShadowVisible: false,
           headerStyle: { backgroundColor: '#FAFAFA' },
           headerLeft: () => (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => router.back()}
               style={{ marginLeft: 5, padding: 5 }}
               activeOpacity={0.6}
@@ -47,10 +48,10 @@ export default function RegisterScreen() {
               <Ionicons name="arrow-back" size={28} color="#1976D2" />
             </TouchableOpacity>
           )
-        }} 
+        }}
       />
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -62,7 +63,7 @@ export default function RegisterScreen() {
         </View>
 
         <View style={styles.formContainer}>
-          
+
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.input}
@@ -95,8 +96,8 @@ export default function RegisterScreen() {
             />
           </View>
 
-          <TouchableOpacity 
-            style={styles.registerButton} 
+          <TouchableOpacity
+            style={styles.registerButton}
             onPress={handleRegister}
             activeOpacity={0.8}
           >
@@ -107,7 +108,7 @@ export default function RegisterScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Text style={styles.footerBrand}>YAŞAR BİLGİ</Text>
+        <YasarBilgiLogo width={120} height={19} />
       </View>
 
     </KeyboardAvoidingView>
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 25,
-    paddingTop: 20, 
+    paddingTop: 20,
     paddingBottom: 100,
   },
   logoContainer: {
@@ -153,7 +154,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     marginBottom: 20,
   },
-  
+
   // ŞEFİM: Giriş ekranındaki gibi daha zarif ölçülere çekildi
   input: {
     backgroundColor: '#FFF',
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
     borderColor: '#EBEBEB',
     borderRadius: 12, // 15'ten 12'ye düşürüldü
     paddingVertical: 14, // Yükseklik daraltıldı
-    paddingHorizontal: 16, 
+    paddingHorizontal: 16,
     fontSize: 15, // Yazı boyutu bir tık küçültüldü
     color: '#333',
     elevation: 1,
@@ -170,7 +171,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
   },
-  
+
   // ŞEFİM: Buton yüksekliği ve köşe yuvarlaması inceltildi
   registerButton: {
     backgroundColor: '#1976D2',
@@ -190,7 +191,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     letterSpacing: 1,
   },
-  
+
   footer: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 40 : 20,

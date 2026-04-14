@@ -13,8 +13,9 @@ interface AccordionCategoryProps {
   onDetailsPress: (item: RequestItemType) => void;
   selectedIds: string[];
   onSelect: (id: string, isSelected: boolean) => void;
-  showCheckbox?: boolean;
+  variant?: 'request' | 'history';
 }
+
 export default function AccordionCategory({
   index,
   title,
@@ -24,7 +25,7 @@ export default function AccordionCategory({
   onDetailsPress,
   selectedIds,
   onSelect,
-  showCheckbox = true
+  variant = 'request',
 }: AccordionCategoryProps) {
   const animatedController = useRef(new Animated.Value(expanded ? 1 : 0)).current;
   const [contentHeight, setContentHeight] = useState(0);
@@ -43,6 +44,7 @@ export default function AccordionCategory({
   });
 
   const categoryIds = requests.map(r => r.id);
+
   const isAllSelected =
     categoryIds.length > 0 &&
     categoryIds.every(id => selectedIds.includes(id));
@@ -60,14 +62,14 @@ export default function AccordionCategory({
         toValue: 1,
         duration: 400,
         delay: index * 100,
-        useNativeDriver: true
+        useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 400,
         delay: index * 100,
-        useNativeDriver: true
-      })
+        useNativeDriver: true,
+      }),
     ]).start();
   }, [index]);
 
@@ -75,7 +77,7 @@ export default function AccordionCategory({
     <Animated.View
       style={[
         styles.categoryContainer,
-        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
       ]}
     >
       <CategoryHeader
@@ -85,6 +87,7 @@ export default function AccordionCategory({
         onToggle={onToggle}
         isAllSelected={isAllSelected}
         onSelectAll={handleToggleCategory}
+        showCheckbox={variant === 'request'}
       />
 
       <Animated.View style={[styles.drawer, { height: bodyHeight }]}>
@@ -92,7 +95,9 @@ export default function AccordionCategory({
           style={styles.contentWrapper}
           onLayout={(event) => {
             const { height } = event.nativeEvent.layout;
-            if (height > 0 && contentHeight === 0) setContentHeight(height);
+            if (height > 0 && contentHeight === 0) {
+              setContentHeight(height);
+            }
           }}
         >
           {requests.map((req) => (
@@ -102,7 +107,7 @@ export default function AccordionCategory({
               onItemPress={onDetailsPress}
               isSelected={selectedIds.includes(req.id)}
               onSelect={onSelect}
-              showCheckbox={showCheckbox}
+              showCheckbox={variant === 'request'}
             />
           ))}
         </View>
@@ -119,5 +124,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     position: 'absolute',
     width: '100%',
-  }
+  },
 });

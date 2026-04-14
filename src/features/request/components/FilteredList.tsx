@@ -10,7 +10,7 @@ interface FilteredListProps {
   onDetailsPress: (item: RequestItem) => void;
   selectedIds: string[];
   onSelect: (id: string, isSelected: boolean) => void;
-  showCheckbox?: boolean;
+  variant?: 'request' | 'history';
 }
 
 const FilteredList: React.FC<FilteredListProps> = ({
@@ -20,7 +20,7 @@ const FilteredList: React.FC<FilteredListProps> = ({
   onDetailsPress,
   selectedIds,
   onSelect,
-  showCheckbox = true
+  variant = 'request',
 }) => {
   return (
     <ScrollView showsVerticalScrollIndicator={false} style={styles.list}>
@@ -35,7 +35,7 @@ const FilteredList: React.FC<FilteredListProps> = ({
           onDetailsPress={onDetailsPress}
           selectedIds={selectedIds}
           onSelect={onSelect}
-          showCheckbox={showCheckbox}
+          variant={variant}
         />
       ))}
 
@@ -45,7 +45,7 @@ const FilteredList: React.FC<FilteredListProps> = ({
 };
 
 const styles = StyleSheet.create({
-  list: { flex: 1 }
+  list: { flex: 1 },
 });
 
 export default FilteredList;

@@ -16,12 +16,12 @@ export default function ActiveDelegatesScreen() {
   // ŞEFİM: Silme tuşu için onay pop-up mekanizması geri geldi
   const handleRevoke = (id: string) => {
     Alert.alert(
-      "Vekalet İptali",
-      "Bu vekaleti iptal etmek istediğinize emin misiniz?",
+      "Vekalet Silme",
+      "Bu vekaleti silmek istediğinize emin misiniz?",
       [
         { text: "Vazgeç", style: "cancel" },
         { 
-          text: "İptal Et", 
+          text: "Sil", 
           style: "destructive", 
           onPress: () => console.log("Backend'e silme isteği gönderildi ID:", id) 
         }
@@ -123,7 +123,6 @@ const styles = StyleSheet.create({
     top: 15,
     right: 15,
     padding: 6,
-    backgroundColor: '#FFEBEE', // Buton arka planı da mavi tonuyla uyumlu yapıldı
     borderRadius: 8,
     zIndex: 10,
   },

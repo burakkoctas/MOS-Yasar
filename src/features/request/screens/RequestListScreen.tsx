@@ -33,7 +33,7 @@ export default function RequestListScreen() {
         }
       });
     });
-    return Array.from(dates).sort(); 
+    return Array.from(dates).sort();
   }, [allRequests]);
 
   // ŞEFİM DİKKAT: Veri çekme fonksiyonu
@@ -53,10 +53,10 @@ export default function RequestListScreen() {
   useFocusEffect(
     useCallback(() => {
       // 1. Önce listeyi sıfırla (Böylece animasyonun yeniden çalışması için bileşenler yenilenir)
-      setAllRequests([]); 
+      setAllRequests([]);
       // 2. Diğer state'leri temizle
       setActiveCategoryTitle(null);
-      setSearchKeyword(''); 
+      setSearchKeyword('');
       setSelectedIds([]);
       // 3. Yeni isteği at
       fetchData();
@@ -67,8 +67,8 @@ export default function RequestListScreen() {
     setIsLoading(true);
     try {
       await mockApi.processAction(ids, action);
-      setSelectedIds([]); 
-      await fetchData();   
+      setSelectedIds([]);
+      await fetchData();
     } catch (error) {
       console.error("İşlem sırasında hata:", error);
     } finally {
@@ -92,31 +92,33 @@ export default function RequestListScreen() {
       <FilteredList
         data={processedData}
         selectedIds={selectedIds}
+        variant="request"
         onSelect={(id, val) => {
           setSelectedIds(prev => val ? [...prev, id] : prev.filter(x => x !== id));
+
         }}
         openCategory={activeCategoryTitle}
         onToggle={(categoryTitle) => {
           setActiveCategoryTitle(prev => prev === categoryTitle ? null : categoryTitle);
         }}
         onDetailsPress={(item) => router.push({
-          pathname: "/request/[id]", 
-          params: { id: item.id }    
+          pathname: "/request/[id]",
+          params: { id: item.id }
         })}
       />
 
       <ActionDrawer
         selectedIds={selectedIds}
-        onActionComplete={() => handleActionComplete(selectedIds, 'APPROVE')} 
+        onActionComplete={() => handleActionComplete(selectedIds, 'APPROVE')}
       />
 
       <RadioDateModal
         visible={modalVisible}
-        currentSelection={searchKeyword} 
-        availableDates={availableDates} 
+        currentSelection={searchKeyword}
+        availableDates={availableDates}
         onClose={() => setModalVisible(false)}
         onApply={(date) => {
-          setSearchKeyword(date); 
+          setSearchKeyword(date);
           setModalVisible(false);
         }}
       />

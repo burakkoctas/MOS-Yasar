@@ -1,4 +1,5 @@
 // Path: src/features/request/screens/RequestHistoryScreen.tsx
+
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -15,17 +16,17 @@ import { CategoryGroup } from '../types';
 export default function RequestHistoryScreen() {
   const router = useRouter();
 
-  // ŞEFİM: Varsayılan tarih aralığını hesaplayan fonksiyon
   const getDefaultDateRange = () => {
     const today = new Date();
     const threeDaysAgo = new Date();
+
     threeDaysAgo.setDate(today.getDate() - 3);
 
     const formatDate = (date: Date) => {
       return date.toLocaleDateString('tr-TR', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric'
+        year: 'numeric',
       });
     };
 
@@ -36,20 +37,23 @@ export default function RequestHistoryScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-
-  // State artık direkt hesaplanan tarihle başlıyor
+  const [activeCategoryTitle, setActiveCategoryTitle] = useState<string | null>(null);
   const [dateRangeText, setDateRangeText] = useState(getDefaultDateRange());
 
-  const { searchKeyword, setSearchKeyword, processedData } = useRequestFilter(allHistory);
+  const {
+    searchKeyword,
+    setSearchKeyword,
+    processedData,
+  } = useRequestFilter(allHistory);
 
   const fetchHistory = async () => {
     setIsLoading(true);
+
     try {
-      // Not: Gerçek API'de dateRangeText'i parametre olarak gönderebilirsin
       const data = await mockApi.getRequests();
       setAllHistory(data as CategoryGroup[]);
     } catch (error) {
-      console.error("Geçmiş yüklenirken hata:", error);
+      console.error('Geçmiş yüklenirken hata:', error);
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +64,8 @@ export default function RequestHistoryScreen() {
       setAllHistory([]);
       setSelectedIds([]);
       setSearchKeyword('');
+      setActiveCategoryTitle(null);
+
       fetchHistory();
     }, [])
   );
@@ -79,17 +85,21 @@ export default function RequestHistoryScreen() {
 
       <FilteredList
         data={processedData}
-        openCategory={null}
-        onToggle={() => { }}
+        openCategory={activeCategoryTitle}
+        onToggle={(categoryTitle) =>
+          setActiveCategoryTitle((prev) =>
+            prev === categoryTitle ? null : categoryTitle
+          )
+        }
         onDetailsPress={(item) =>
           router.push({
-            pathname: "/request/[id]",
-            params: { id: item.id }
+            pathname: '/request/[id]',
+            params: { id: item.id },
           })
         }
-        selectedIds={[]}
-        onSelect={() => { }}
-        showCheckbox={false}
+        selectedIds={selectedIds}
+        onSelect={() => {}}
+        variant="history"
       />
 
       <DateRangePickerModal
@@ -108,8 +118,29 @@ export default function RequestHistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 15, paddingTop: 10 },
-  headerContainer: { alignItems: 'center', marginTop: 15, marginBottom: 15 },
-  title: { fontSize: 18, fontWeight: '500', color: '#1976D2', letterSpacing: 1 },
-  subTitle: { fontSize: 14, color: '#888', marginTop: 4 },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingHorizontal: 15,
+    paddingTop: 10,
+  },
+
+  headerContainer: {
+    alignItems: 'center',
+    marginTop: 15,
+    marginBottom: 15,
+  },
+
+  title: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#1976D2',
+    letterSpacing: 1,
+  },
+
+  subTitle: {
+    fontSize: 14,
+    color: '#888',
+    marginTop: 4,
+  },
 });
