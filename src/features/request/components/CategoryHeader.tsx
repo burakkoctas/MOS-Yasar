@@ -25,7 +25,7 @@ export default function CategoryHeader({
   return (
     <View style={[styles.header, expanded ? styles.headerActive : styles.headerInactive]}>
       {/* Tıklanabilir Sol Alan */}
-      <Pressable style={styles.clickableArea} onPress={onToggle}>
+      <Pressable android_ripple={{ color: 'transparent' }} focusable={false} style={styles.clickableArea} onPress={onToggle}>
         <View style={styles.countCircle}>
           <Text style={styles.countText}>{count}</Text>
         </View>
@@ -40,6 +40,7 @@ export default function CategoryHeader({
             onValueChange={onSelectAll}
             color={isAllSelected ? '#2196F3' : undefined}
             style={styles.checkbox}
+            
           />
         </View>
       )}
@@ -53,14 +54,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between', 
     alignItems: 'center', 
     borderRadius: 50, 
-    shadowColor: '#000',
+    shadowColor: '#ffffff',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3, 
     marginHorizontal: 10
   },
-  headerInactive: { backgroundColor: '#f2f2f2' },
+  headerInactive: { backgroundColor: '#efefef' ,borderWidth: 0},
   headerActive: { 
     backgroundColor: '#E3F2FD', 
     borderWidth: 1, 

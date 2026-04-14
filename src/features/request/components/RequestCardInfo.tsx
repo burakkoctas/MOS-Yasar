@@ -19,10 +19,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
-    marginBottom: 10,
+    marginBottom: 2,
   },
-  senderText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
-  dateText: { fontSize: 13, color: '#555' },
+  senderText: { fontSize: 14, fontWeight: 'bold', color: '#000' },
+  dateText: { fontSize: 11, color: '#555' },
 });
 
 export default RequestCardInfo;

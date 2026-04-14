@@ -1,37 +1,25 @@
-import { Ionicons } from '@expo/vector-icons';
+// Path: src/shared/components/ui/LoadingArrow.tsx
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing } from 'react-native';
+import CustomFabIcon from './CustomFabIcon';
 
 interface LoadingArrowProps {
   size?: number;
-  color?: string;
 }
 
-export default function LoadingArrow({ 
-  size = 36, 
-  color = '#1976D2' 
-}: LoadingArrowProps) {
-  
+export default function LoadingArrow({ size = 70 }: LoadingArrowProps) {
   const spinValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const runAnimation = () => {
-      spinValue.setValue(0);
+    Animated.loop(
       Animated.timing(spinValue, {
         toValue: 1,
-        duration: 1000, // 1 Saniye Takla
-        easing: Easing.bezier(0.4, 0, 0.2, 1),
+        duration: 1200, // 1.2 saniyelik pürüzsüz ve kurumsal bir dönüş hızı
+        easing: Easing.linear,
         useNativeDriver: true,
-      }).start(() => {
-        // 1 Saniye Bekleme
-        setTimeout(() => {
-          runAnimation();
-        }, 1000);
-      });
-    };
-
-    runAnimation();
-  }, [spinValue]);
+      })
+    ).start();
+  }, []);
 
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
@@ -40,7 +28,7 @@ export default function LoadingArrow({
 
   return (
     <Animated.View style={{ transform: [{ rotate: spin }] }}>
-      <Ionicons name="arrow-forward" size={size} color={color} />
+      <CustomFabIcon size={size} />
     </Animated.View>
   );
 }

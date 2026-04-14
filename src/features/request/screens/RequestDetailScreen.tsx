@@ -1,20 +1,26 @@
+// Path: src/features/request/screens/RequestDetailScreen.tsx
 import ActionDrawer from '@/src/shared/components/ui/ActionDrawer';
+import ConfirmModal from '@/src/shared/components/ui/ConfirmModal';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function RequestDetailScreen() {
+    const router = useRouter();
+    const insets = useSafeAreaInsets();
+    const { id } = useLocalSearchParams<{ id: string }>(); 
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
     const dummyDetail = {
-        id: "REQ-9982",
+        id: id || "REQ-9982",
         isim: "Ahmet Yılmaz",
         tarih: "08 Nis 2026",
         belgeNo: "BEL-2026-001",
-        sirket: "Cevher Jant Sanayii A.Ş.",
+        sirket: "Pinar Et ve Süt.",
         statu: "Yönetici Onayında",
-        istekNo: "REQ-9982",
+        istekNo: id || "REQ-9982",
         acilis: "05.04.2026",
         bitis: "10.04.2026",
         modul: "SAP FI",
@@ -30,29 +36,30 @@ export default function RequestDetailScreen() {
     );
 
     return (
+        // DİKKAT: Native Header kullanıldığı için en dışta SafeAreaView (top) gereksizdir.
+        // Standart View kullanıyoruz, çünkü üst boşluğu Header hallediyor.
         <View style={styles.container}>
-            {/* ŞEFİM, BARIN ÇAKILI KALMASI İÇİN AYARLAR BURADA */}
             <Stack.Screen
                 options={{
-                    title: "Talep Onay",
-                    headerBackTitle: "Geri",
-                    headerTransparent: false, // Çakılı kalması için false yaptık
-                    headerShadowVisible: false, // Alt çizgiyi/gölgeyi sildik, sayfa ile bütünleşti
-                    headerStyle: {
-                        backgroundColor: '#FAFAFA', // Sayfa zemini ile aynı renk yaparak "yokmuş" hissi verdik
-                    },
+                    headerShown: true, // ŞEFİM KRİTİK: Header'ın görünmesini garanti ediyoruz
+                    title: "Geri",
+                    headerTransparent: false, 
+                    headerShadowVisible: false, 
+                    headerStyle: { backgroundColor: '#FAFAFA' },
                     headerTintColor: '#1976D2',
-                    headerTitleStyle: {
-                        fontWeight: 'bold',
-                        color: '#1976D2'
-                    },
+                    headerTitleStyle: { fontWeight: 'light', color: '#1976D2', fontSize: 18 },
+                    headerLeft: () => (
+                        <Pressable
+                            onPress={() => router.back()}
+                            style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, marginLeft: 5 })}
+                        >
+                            <Ionicons name="chevron-back" size={28} color="#1976D2" />
+                        </Pressable>
+                    ),
                     headerRight: () => (
                         <Pressable
                             onPress={() => setIsDeleteModalVisible(true)}
-                            style={({ pressed }) => ({
-                                opacity: pressed ? 0.5 : 1,
-                                marginRight: 15,
-                            })}
+                            style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, marginRight: 5 })}
                         >
                             <Ionicons name="trash-outline" size={24} color="#1976D2" />
                         </Pressable>
@@ -61,7 +68,10 @@ export default function RequestDetailScreen() {
             />
 
             <ScrollView
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={[
+                    styles.scrollContent, 
+                    { paddingBottom: insets.bottom + 120 } 
+                ]}
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.statusBar}>
@@ -110,38 +120,27 @@ export default function RequestDetailScreen() {
                     <Text style={styles.noteName}>Ayşe Kaya <Text style={styles.noteDate}>(05.04.2026)</Text></Text>
                     <Text style={styles.noteText}>İlgili yetki formu ektedir, işlemler başlatıldı.</Text>
                 </View>
-
-                <View style={{ height: 120 }} />
             </ScrollView>
 
-            {/* MODAL SİSTEMİ */}
-            <Modal
-                animationType="fade"
-                transparent={true}
+            <ConfirmModal 
                 visible={isDeleteModalVisible}
-                onRequestClose={() => setIsDeleteModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalView}>
-                        <Text style={styles.modalTitle}>Uyarı</Text>
-                        <Text style={styles.modalContentText}>
-                            İstek yalnızca talep listenizden kaldırılacak, Talep eden sisteme <Text style={{ fontWeight: 'bold' }}>iletilmeyecektir.</Text> Emin misiniz?
-                        </Text>
-                        <View style={styles.modalButtonContainer}>
-                            <TouchableOpacity style={styles.modalButton} onPress={() => setIsDeleteModalVisible(false)}>
-                                <Text style={styles.buttonTextDefault}>HAYIR</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.modalButton} onPress={() => setIsDeleteModalVisible(false)}>
-                                <Text style={styles.buttonTextBold}>EVET</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+                title="Uyarı"
+                message={
+                    <>
+                        İstek yalnızca talep listenizden kaldırılacak, Talep eden sisteme <Text style={{ fontStyle: 'italic', fontWeight: 'bold' }}>iletilmeyecektir.</Text> Emin misiniz?
+                    </>
+                }
+                onCancel={() => setIsDeleteModalVisible(false)}
+                onConfirm={() => {
+                    setIsDeleteModalVisible(false);
+                    router.back();
+                }}
+            />
 
             <ActionDrawer
                 selectedIds={[dummyDetail.id]}
-                onActionComplete={() => console.log("Bitti")}
+                onActionComplete={() => router.back()
+                }
             />
         </View>
     );
@@ -149,10 +148,7 @@ export default function RequestDetailScreen() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#FAFAFA' },
-    scrollContent: {
-        padding: 20,
-        paddingTop: 10 // Bar şeffaf değil, o yüzden artık büyük paddinge gerek yok
-    },
+    scrollContent: { padding: 20, paddingTop: 10 },
     statusBar: { width: '80%', alignSelf: 'center', backgroundColor: '#FFF3E0', paddingVertical: 8, borderRadius: 20, alignItems: 'center', marginBottom: 25, borderWidth: 1, borderColor: '#FFE0B2' },
     statusText: { color: '#E65100', fontWeight: 'bold', fontSize: 14 },
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
@@ -169,12 +165,4 @@ const styles = StyleSheet.create({
     noteName: { fontSize: 14, fontWeight: 'bold', color: '#333' },
     noteDate: { fontWeight: 'normal', color: '#888', fontSize: 12 },
     noteText: { fontSize: 14, color: '#555', marginTop: 5, fontStyle: 'italic' },
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
-    modalView: { width: '85%', backgroundColor: 'white', borderRadius: 25, padding: 25, alignItems: 'center', elevation: 5 },
-    modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#1976D2', marginBottom: 15 },
-    modalContentText: { fontSize: 15, textAlign: 'center', color: '#1976D2', lineHeight: 22, marginBottom: 25 },
-    modalButtonContainer: { flexDirection: 'row', justifyContent: 'space-around', width: '100%', borderTopWidth: 0.5, borderTopColor: '#E0E0E0', paddingTop: 15 },
-    modalButton: { paddingHorizontal: 20, paddingVertical: 5 },
-    buttonTextDefault: { color: '#1976D2', fontSize: 16 },
-    buttonTextBold: { color: '#1976D2', fontSize: 16, fontWeight: 'bold' },
 });

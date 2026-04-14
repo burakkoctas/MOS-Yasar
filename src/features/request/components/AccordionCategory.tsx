@@ -1,37 +1,84 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
+import { RequestItem as RequestItemType } from '../types';
 import CategoryHeader from './CategoryHeader';
 import RequestItem from './RequestItem';
 
 interface AccordionCategoryProps {
-  index: number; 
+  index: number;
   title: string;
-  requests: any[];
+  requests: RequestItemType[];
   expanded: boolean;
   onToggle: () => void;
-  onDetailsPress: (item: any) => void;
+  onDetailsPress: (item: RequestItemType) => void;
   selectedIds: string[];
   onSelect: (id: string, isSelected: boolean) => void;
+  showCheckbox?: boolean;
 }
-
-export default function AccordionCategory({ 
-  index, title, requests = [], expanded, onToggle, onDetailsPress, selectedIds, onSelect 
+export default function AccordionCategory({
+  index,
+  title,
+  requests = [],
+  expanded,
+  onToggle,
+  onDetailsPress,
+  selectedIds,
+  onSelect,
+  showCheckbox = true
 }: AccordionCategoryProps) {
-  
-  // Kategori bazlı ID listesi
-  const categoryIds = requests.map(r => r.id);
-  
-  // Kategorideki her şey seçili mi kontrolü
-  const isAllSelected = categoryIds.length > 0 && categoryIds.every(id => selectedIds.includes(id));
+  const animatedController = useRef(new Animated.Value(expanded ? 1 : 0)).current;
+  const [contentHeight, setContentHeight] = useState(0);
 
-  // Kategori Header'ına basıldığında toplu seçim
+  useEffect(() => {
+    Animated.timing(animatedController, {
+      toValue: expanded ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [expanded]);
+
+  const bodyHeight = animatedController.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, contentHeight],
+  });
+
+  const categoryIds = requests.map(r => r.id);
+  const isAllSelected =
+    categoryIds.length > 0 &&
+    categoryIds.every(id => selectedIds.includes(id));
+
   const handleToggleCategory = (value: boolean) => {
     requests.forEach(req => onSelect(req.id, value));
   };
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(15)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        delay: index * 100,
+        useNativeDriver: true
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 400,
+        delay: index * 100,
+        useNativeDriver: true
+      })
+    ]).start();
+  }, [index]);
+
   return (
-    <View style={styles.categoryContainer}>
-      <CategoryHeader 
+    <Animated.View
+      style={[
+        styles.categoryContainer,
+        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+      ]}
+    >
+      <CategoryHeader
         title={title}
         count={requests.length}
         expanded={expanded}
@@ -40,25 +87,37 @@ export default function AccordionCategory({
         onSelectAll={handleToggleCategory}
       />
 
-      {expanded && (
-        <View style={styles.itemsList}>
+      <Animated.View style={[styles.drawer, { height: bodyHeight }]}>
+        <View
+          style={styles.contentWrapper}
+          onLayout={(event) => {
+            const { height } = event.nativeEvent.layout;
+            if (height > 0 && contentHeight === 0) setContentHeight(height);
+          }}
+        >
           {requests.map((req) => (
-            <RequestItem 
-              key={req.id} 
+            <RequestItem
+              key={req.id}
               requestData={req}
               onItemPress={onDetailsPress}
               isSelected={selectedIds.includes(req.id)}
-              // HATA BURADAYDI! Artık fonksiyonu aracı kullanmadan direkt paslıyoruz:
-              onSelect={onSelect} 
+              onSelect={onSelect}
+              showCheckbox={showCheckbox}
             />
           ))}
         </View>
-      )}
-    </View>
+      </Animated.View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   categoryContainer: { marginBottom: 12 },
-  itemsList: { paddingTop: 10, paddingHorizontal: 5 }
+  drawer: { overflow: 'hidden' },
+  contentWrapper: {
+    paddingTop: 10,
+    paddingHorizontal: 5,
+    position: 'absolute',
+    width: '100%',
+  }
 });

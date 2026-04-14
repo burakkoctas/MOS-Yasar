@@ -1,22 +1,20 @@
-import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
-
   return (
-    <ThemeProvider value={DefaultTheme}>
-      <Stack>
+    // SafeAreaProvider sadece sarmalar, margin verilmez. 
+    // Boşluklar sayfa içindeki SafeAreaView veya insets ile yönetilir.
+    <SafeAreaProvider>
+      <StatusBar style="dark" />
+      <Stack screenOptions={{ headerShown: false }}>
+        {/* Ana uygulama akışı (Tab'lar) */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        
+        {/* İleride Auth (Giriş/Kayıt) akışını buraya ekleyeceğiz */}
+        {/* <Stack.Screen name="(auth)" options={{ headerShown: false }} /> */}
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

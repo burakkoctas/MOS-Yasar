@@ -1,106 +1,134 @@
-import FilteredList from '@/src/features/request/components/FilteredList';
-import ActionDrawer from '@/src/shared/components/ui/ActionDrawer';
-import RequestFilterBar from '@/src/shared/components/ui/RequestFİlterBar';
+// Path: src/features/request/screens/RequestListScreen.tsx
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { DUMMY_DATA } from '../../../shared/api/mockData'; // Eski data.ts'i buraya taşıyabilirsin
+
+import FilteredList from '@/src/features/request/components/FilteredList';
+import RadioDateModal from '@/src/features/request/components/RadioDateModal';
+import ActionDrawer from '@/src/shared/components/ui/ActionDrawer';
+import AppLoader from '@/src/shared/components/ui/AppLoader';
+import RequestFilterBar from '../components/RequestFilterBar';
+
+import { mockApi } from '@/src/shared/api/mockApi';
+import { useRequestFilter } from '../hooks/useRequestFilter';
+import { CategoryGroup } from '../types';
 
 export default function RequestListScreen() {
   const router = useRouter();
-  const [activeCategoryTitle, setActiveCategoryTitle] = useState<string | null>(null);
-  const [searchFilterKeyword, setSearchFilterKeyword] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Sayfaya her odaklanıldığında seçimleri ve aramayı temizle
+  const [allRequests, setAllRequests] = useState<CategoryGroup[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeCategoryTitle, setActiveCategoryTitle] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const { searchKeyword, setSearchKeyword, processedData } = useRequestFilter(allRequests);
+
+  const availableDates = useMemo(() => {
+    const dates = new Set<string>();
+    allRequests.forEach(group => {
+      (group.data || []).forEach(item => {
+        if (item.baslangic && item.baslangic !== '-') {
+          dates.add(item.baslangic);
+        }
+      });
+    });
+    return Array.from(dates).sort(); 
+  }, [allRequests]);
+
+  // ŞEFİM DİKKAT: Veri çekme fonksiyonu
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const data = await mockApi.getRequests();
+      setAllRequests(data as CategoryGroup[]);
+    } catch (error) {
+      console.error("Veri yüklenirken hata oluştu:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // PROFESYONEL YENİLEME: Her odaklanıldığında (sekme geçişinde) çalışır
   useFocusEffect(
     useCallback(() => {
+      // 1. Önce listeyi sıfırla (Böylece animasyonun yeniden çalışması için bileşenler yenilenir)
+      setAllRequests([]); 
+      // 2. Diğer state'leri temizle
       setActiveCategoryTitle(null);
-      setSearchFilterKeyword('');
+      setSearchKeyword(''); 
       setSelectedIds([]);
+      // 3. Yeni isteği at
+      fetchData();
     }, [])
   );
 
-  // Arama filtresi mantığı
-  const processedFilteredData = useMemo(() => {
-    if (!DUMMY_DATA) return [];
-    return DUMMY_DATA.map(categoryGroup => {
-      const items = categoryGroup.data || [];
-      const matchedRequests = items.filter(requestItem => {
-        return Object.values(requestItem).some(val =>
-          String(val).toLowerCase().includes(searchFilterKeyword.toLowerCase())
-        );
-      });
-      if (categoryGroup.category.toLowerCase().includes(searchFilterKeyword.toLowerCase()) || matchedRequests.length > 0) {
-        return { ...categoryGroup, data: matchedRequests };
-      }
-      return null;
-    }).filter(Boolean);
-  }, [searchFilterKeyword]);
+  const handleActionComplete = async (ids: string[], action: 'APPROVE' | 'REJECT') => {
+    setIsLoading(true);
+    try {
+      await mockApi.processAction(ids, action);
+      setSelectedIds([]); 
+      await fetchData();   
+    } catch (error) {
+      console.error("İşlem sırasında hata:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {/* ÜST ARAMA BARI */}
       <RequestFilterBar
-        onSearch={setSearchFilterKeyword}
-        onDatePress={() => {
-          // Şefim burada Modal içinde Radio Button listesi tetiklenecek
-          console.log("Hızlı tarih seçim listesi açılıyor...");
-        }}
+        onSearch={setSearchKeyword}
+        onDatePress={() => setModalVisible(true)}
+        placeholder="Arama kriteri giriniz"
       />
 
-      {/* BAŞLIK ALANI (Geçmiş Talepler sayfasıyla hizalı) */}
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Talep Listesi</Text>
         <View style={styles.spacingPlaceholder} />
       </View>
 
-      {/* ANA LİSTE */}
       <FilteredList
-        data={processedFilteredData}
+        data={processedData}
         selectedIds={selectedIds}
         onSelect={(id, val) => {
           setSelectedIds(prev => val ? [...prev, id] : prev.filter(x => x !== id));
         }}
         openCategory={activeCategoryTitle}
-
-        // ŞEFİM, İSTEDİĞİN "TIKLA AÇ / TIKLA KAPAT" MANTIĞI BURADA:
         onToggle={(categoryTitle) => {
           setActiveCategoryTitle(prev => prev === categoryTitle ? null : categoryTitle);
         }}
+        onDetailsPress={(item) => router.push({
+          pathname: "/request/[id]", 
+          params: { id: item.id }    
+        })}
+      />
 
-        onDetailsPress={(item) => {
-          router.push('/request-detail');
+      <ActionDrawer
+        selectedIds={selectedIds}
+        onActionComplete={() => handleActionComplete(selectedIds, 'APPROVE')} 
+      />
+
+      <RadioDateModal
+        visible={modalVisible}
+        currentSelection={searchKeyword} 
+        availableDates={availableDates} 
+        onClose={() => setModalVisible(false)}
+        onApply={(date) => {
+          setSearchKeyword(date); 
+          setModalVisible(false);
         }}
       />
 
-      {/* ALT ONAY ÇEKMECESİ VE DÖNEN FAB */}
-      <ActionDrawer
-        selectedIds={selectedIds}
-        onActionComplete={() => setSelectedIds([])}
-      />
+      <AppLoader visible={isLoading} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: 15
-  },
-  headerContainer: {
-    alignItems: 'center',
-    marginTop: 15,
-    marginBottom: 15
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#1976D2',
-    letterSpacing: 1
-  },
-  spacingPlaceholder: {
-    height: 23 // Geçmiş taleplerdeki tarih yazısının boşluğunu simüle eder
-  },
+  container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 15, paddingTop: 10 },
+  headerContainer: { alignItems: 'center', marginTop: 15, marginBottom: 15 },
+  title: { fontSize: 18, fontWeight: '500', color: '#1976D2', letterSpacing: 1 },
+  spacingPlaceholder: { height: 23 },
 });

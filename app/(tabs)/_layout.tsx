@@ -1,27 +1,31 @@
+// Path: app/(tabs)/_layout.tsx
 import MainBottomNavbar from '@/src/shared/components/ui/MainBottomNavbar';
-import { Slot } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Tabs } from 'expo-router';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   return (
-    <View style={styles.container}>
-      {/* Aktif olan sayfa (index, past-requests vb.) buraya gelir */}
-      <View style={styles.content}>
-        <Slot />
-      </View>
-
-      {/* Navbar her zaman en altta sabit kalır */}
-      <MainBottomNavbar />
-    </View>
+    // DİKKAT: Global Safe Area! Sadece üst kısmı korur, alt kısmı Navbar halleder.
+    <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <Tabs
+        screenOptions={{ 
+          headerShown: false,
+          tabBarHideOnKeyboard: true 
+        }}
+        tabBar={() => <MainBottomNavbar />}
+      >
+        <Tabs.Screen name="index" />
+        <Tabs.Screen name="past-requests" />
+        <Tabs.Screen name="settings" />
+      </Tabs>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  content: {
-    flex: 1, // Sayfanın Navbar dışında kalan tüm alanı kaplamasını sağlar
-  },
+  safeArea: { 
+    flex: 1, 
+    backgroundColor: '#fff' // Arka planın sayfalara uyumlu olması kritik
+  }
 });

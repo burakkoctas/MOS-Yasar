@@ -1,32 +1,40 @@
 import Checkbox from 'expo-checkbox';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import StatusBadge from './StatusBadge.js';
+import StatusBadge from './StatusBadge';
 
 interface HeaderProps {
   statusLabel: string;
-  isSelected: boolean; // State artık yukarıdan geliyor
+  isSelected: boolean;
   onSelect: (value: boolean) => void;
+  showCheckbox?: boolean;
 }
 
-const RequestCardHeader: React.FC<HeaderProps> = ({ statusLabel, isSelected, onSelect }) => {
+const RequestCardHeader: React.FC<HeaderProps> = ({
+  statusLabel,
+  isSelected,
+  onSelect,
+  showCheckbox = true
+}) => {
   return (
     <View style={styles.headerContainer}>
       <View style={styles.badgeWrapper}>
-        <StatusBadge status={statusLabel} fullWidth={true} />
+        <StatusBadge status={statusLabel} fullWidth />
       </View>
 
-      <Pressable 
-        style={styles.checkboxWrapper}
-        onPress={(e) => e.stopPropagation()} // Karta tıklamayı engeller
-      >
-        <Checkbox
-          value={isSelected}
-          onValueChange={onSelect}
-          color={isSelected ? '#1976D2' : undefined}
-          style={styles.checkbox}
-        />
-      </Pressable>
+      {showCheckbox && (
+        <Pressable
+          style={styles.checkboxWrapper}
+          onPress={(e) => e.stopPropagation()}
+        >
+          <Checkbox
+            value={isSelected}
+            onValueChange={onSelect}
+            color={isSelected ? '#1976D2' : undefined}
+            style={styles.checkbox}
+          />
+        </Pressable>
+      )}
     </View>
   );
 };
@@ -39,11 +47,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingRight: 15,
     height: 30,
-    zIndex: 10,
   },
-  badgeWrapper: { position: 'absolute', left: '10%', width: '80%', pointerEvents: 'none' },
-  checkboxWrapper: { padding: 10, marginRight: -10, zIndex: 20 },
-  checkbox: { width: 20, height: 20, borderRadius: 4 },
+  badgeWrapper: {
+    position: 'absolute',
+    left: '10%',
+    width: '80%',
+  },
+  checkboxWrapper: {
+    padding: 10,
+    marginRight: -10,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+  },
 });
 
 export default RequestCardHeader;

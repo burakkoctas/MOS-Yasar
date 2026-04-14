@@ -20,20 +20,17 @@ export default function LoaderTestScreen() {
       <Stack.Screen options={{ title: "Yeni Loader Testi" }} />
 
       <View style={styles.content}>
-        <Text style={styles.infoText}>
-          Yeni Tasarım: Beyaz Zemin, Mavi Çember, Mavi Ok{"\n"}
-          Efekt: 0.75sn Takla + 0.75sn Bekleme
+        <Text style={styles.infoText}>{"\n"}
         </Text>
 
         <TouchableOpacity 
           style={styles.testButton} 
           onPress={handleStartLoading}
         >
-          <Text style={styles.buttonText}>5 SANİYE TEST ET</Text>
+          <Text style={styles.buttonText}>TEST ET</Text>
         </TouchableOpacity>
 
         <Text style={styles.subText}>
-          FAB ile tam uyumlu yeni yükleme ekranı.
         </Text>
       </View>
 

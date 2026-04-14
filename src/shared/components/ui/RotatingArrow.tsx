@@ -1,22 +1,18 @@
-import { Ionicons } from '@expo/vector-icons';
+// Path: src/shared/components/ui/RotatingArrow.tsx
 import React from 'react';
 import { Animated } from 'react-native';
+import CustomFabIcon from './CustomFabIcon'; // Patronun SVG İkonu
 
 interface RotatingArrowProps {
   animValue: Animated.AnimatedInterpolation<string | number>;
   size?: number;
-  color?: string;
 }
 
-export default function RotatingArrow({ 
-  animValue, 
-  size = 36, 
-  color = "#1976D2" 
-}: RotatingArrowProps) {
-  
+export default function RotatingArrow({ animValue, size = 70 }: RotatingArrowProps) {
   return (
-    <Animated.View style={{ transform: [{ rotate: animValue }] }}>
-      <Ionicons name="arrow-forward" size={size} color={color} />
+    // animValue as any kullanımı TypeScript'in Animated tip çakışmasını önler
+    <Animated.View style={{ transform: [{ rotate: animValue as any }] }}>
+      <CustomFabIcon size={size} />
     </Animated.View>
   );
 }
