@@ -1,5 +1,4 @@
-// Path: src/features/request/components/CategoryHeader.tsx
-import Checkbox from 'expo-checkbox';
+import ExpoCheckbox from 'expo-checkbox';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -34,24 +33,20 @@ export default function CategoryHeader({
           <Text style={styles.countText}>{count}</Text>
         </View>
 
-        <Text style={[styles.title, expanded && styles.titleActive]}>
-          {title}
-        </Text>
+        <Text style={[styles.title, expanded && styles.titleActive]}>{title}</Text>
       </Pressable>
 
       {showCheckbox && expanded && (
-        // ŞEFİM: View yerine Pressable yaptık ve hitbox'ı her yönden 15px büyüttük (hitSlop)
-        <Pressable 
+        <Pressable
           style={styles.rightContent}
-          onPress={(e) => {
-            e.stopPropagation(); // Kategori aç/kapa tetiklenmesin
+          onPress={(event) => {
+            event.stopPropagation();
             onSelectAll(!isAllSelected);
           }}
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
         >
-          {/* pointerEvents="none" sayesinde tıklama doğrudan dıştaki Pressable'a gider */}
           <View pointerEvents="none">
-            <Checkbox
+            <ExpoCheckbox
               value={isAllSelected}
               color={isAllSelected ? '#2196F3' : undefined}
               style={styles.checkbox}

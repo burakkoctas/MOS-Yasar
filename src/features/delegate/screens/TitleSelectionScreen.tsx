@@ -1,4 +1,3 @@
-// Path: src/features/delegate/screens/TitleSelectionScreen.tsx
 import ConfirmModal from '@/src/shared/components/ui/ConfirmModal';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
@@ -6,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, FlatList, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useDelegate } from '../context/DelegateContext';
 
-const TITLE_DATA = [
+const titleData = [
   { id: '1', name: 'Akdem' },
   { id: '2', name: 'Alacak Dekontu' },
   { id: '3', name: 'ATF' },
@@ -14,7 +13,13 @@ const TITLE_DATA = [
   { id: '5', name: 'Dijital.Proje' },
 ];
 
-const AnimatedPill = ({ children, index }: { children: React.ReactNode, index: number }) => {
+const AnimatedPill = ({
+  children,
+  index,
+}: {
+  children: React.ReactNode;
+  index: number;
+}) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
 
@@ -23,7 +28,7 @@ const AnimatedPill = ({ children, index }: { children: React.ReactNode, index: n
       Animated.timing(fadeAnim, { toValue: 1, duration: 400, delay: index * 80, useNativeDriver: true }),
       Animated.timing(slideAnim, { toValue: 0, duration: 400, delay: index * 80, useNativeDriver: true }),
     ]).start();
-  }, []);
+  }, [fadeAnim, index, slideAnim]);
 
   return (
     <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
@@ -34,14 +39,15 @@ const AnimatedPill = ({ children, index }: { children: React.ReactNode, index: n
 
 export default function TitleSelectionScreen() {
   const router = useRouter();
-  const { selectedTitles, setSelectedTitles } = useDelegate(); 
+  const { selectedTitles, setSelectedTitles } = useDelegate();
   const [isWarningVisible, setIsWarningVisible] = useState(false);
+  const initialSelectionRef = useRef<string[]>(selectedTitles);
 
   const toggleSelection = (id: string) => {
     setSelectedTitles(
-      selectedTitles.includes(id) 
-        ? selectedTitles.filter(item => item !== id) 
-        : [...selectedTitles, id]
+      selectedTitles.includes(id)
+        ? selectedTitles.filter((item) => item !== id)
+        : [...selectedTitles, id],
     );
   };
 
@@ -50,11 +56,17 @@ export default function TitleSelectionScreen() {
   };
 
   const handleBackPress = () => {
-    if (selectedTitles.length > 0) {
+    const initialSelection = initialSelectionRef.current;
+    const hasChanges =
+      selectedTitles.length !== initialSelection.length ||
+      selectedTitles.some((title) => !initialSelection.includes(title));
+
+    if (hasChanges) {
       setIsWarningVisible(true);
-    } else {
-      router.back();
+      return;
     }
+
+    router.back();
   };
 
   return (
@@ -62,7 +74,7 @@ export default function TitleSelectionScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          headerTitle: "Başlık Seç",
+          headerTitle: 'Başlık Seç',
           headerTitleAlign: 'center',
           headerTitleStyle: { color: '#1976D2', fontWeight: 'normal', fontSize: 18 },
           headerStyle: { backgroundColor: '#FAFAFA' },
@@ -81,8 +93,8 @@ export default function TitleSelectionScreen() {
       />
 
       <FlatList
-        data={TITLE_DATA}
-        keyExtractor={item => item.id}
+        data={titleData}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         renderItem={({ item, index }) => {
@@ -93,15 +105,12 @@ export default function TitleSelectionScreen() {
               <TouchableOpacity
                 style={[
                   styles.pillContainer,
-                  isSelected && styles.pillContainerSelected
+                  isSelected && styles.pillContainerSelected,
                 ]}
                 onPress={() => toggleSelection(item.id)}
                 activeOpacity={0.7}
               >
-                <Text style={[
-                  styles.pillText,
-                  isSelected && styles.pillTextSelected
-                ]}>
+                <Text style={[styles.pillText, isSelected && styles.pillTextSelected]}>
                   {item.name}
                 </Text>
 
@@ -119,17 +128,13 @@ export default function TitleSelectionScreen() {
       <ConfirmModal
         visible={isWarningVisible}
         title="Uyarı"
-        message={
-          <>
-            Yaptığınız değişiklikler kaybolacak.{"\n"}Emin misiniz?
-          </>
-        }
+        message="Yaptığınız değişiklikler kaybolacak. Emin misiniz?"
         confirmText="EVET"
         cancelText="HAYIR"
         onCancel={() => setIsWarningVisible(false)}
         onConfirm={() => {
           setIsWarningVisible(false);
-          setSelectedTitles([]); // Değişiklikleri iptal et
+          setSelectedTitles(initialSelectionRef.current);
           router.back();
         }}
       />
@@ -138,7 +143,7 @@ export default function TitleSelectionScreen() {
 }
 
 const styles = StyleSheet.create({
-  iconPlaceholder: { width: 26, height: 26, justifyContent: 'center', alignItems: 'center' }, 
+  iconPlaceholder: { width: 26, height: 26, justifyContent: 'center', alignItems: 'center' },
   container: { flex: 1, backgroundColor: '#FAFAFA' },
   listContent: { padding: 20, paddingBottom: 40 },
   doneButtonText: { color: '#1976D2', fontWeight: 'normal', fontSize: 16 },

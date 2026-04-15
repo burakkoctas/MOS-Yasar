@@ -1,106 +1,101 @@
-// Path: src/features/request/screens/RequestHistoryScreen.tsx
-
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-
 import DateRangePickerModal from '@/src/features/request/components/DateRangePickerModal';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
+import EntranceTransition from '@/src/shared/components/ui/EntranceTransition';
 import FilteredList from '../components/FilteredList';
 import RequestFilterBar from '../components/RequestFilterBar';
-
-import { mockApi } from '@/src/shared/api/mockApi';
 import { useRequestFilter } from '../hooks/useRequestFilter';
+import { parseDateRangeText, requestService } from '../services/requestService';
 import { CategoryGroup } from '../types';
+
+function getDefaultDateRange() {
+  const today = new Date();
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(today.getDate() - 3);
+
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString('tr-TR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+
+  return `${formatDate(threeDaysAgo)} - ${formatDate(today)}`;
+}
 
 export default function RequestHistoryScreen() {
   const router = useRouter();
-
-  const getDefaultDateRange = () => {
-    const today = new Date();
-    const threeDaysAgo = new Date();
-
-    threeDaysAgo.setDate(today.getDate() - 3);
-
-    const formatDate = (date: Date) => {
-      return date.toLocaleDateString('tr-TR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      });
-    };
-
-    return `${formatDate(threeDaysAgo)} - ${formatDate(today)}`;
-  };
-
   const [allHistory, setAllHistory] = useState<CategoryGroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isContentReady, setIsContentReady] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [activeCategoryTitle, setActiveCategoryTitle] = useState<string | null>(null);
   const [dateRangeText, setDateRangeText] = useState(getDefaultDateRange());
+  const { setSearchKeyword, processedData } = useRequestFilter(allHistory);
 
-  const {
-    searchKeyword,
-    setSearchKeyword,
-    processedData,
-  } = useRequestFilter(allHistory);
-
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async (rangeText: string) => {
+    setIsContentReady(false);
     setIsLoading(true);
-
     try {
-      const data = await mockApi.getRequests();
-      setAllHistory(data as CategoryGroup[]);
-    } catch (error) {
-      console.error('Geçmiş yüklenirken hata:', error);
+      const data = await requestService.getRequestHistory({
+        range: parseDateRangeText(rangeText),
+      });
+      setAllHistory(data);
+      setIsContentReady(true);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      setAllHistory([]);
-      setSelectedIds([]);
       setSearchKeyword('');
       setActiveCategoryTitle(null);
-
-      fetchHistory();
-    }, [])
+      fetchHistory(dateRangeText);
+    }, [dateRangeText, fetchHistory, setSearchKeyword]),
   );
 
   return (
     <View style={styles.container}>
-      <RequestFilterBar
-        onSearch={setSearchKeyword}
-        onDatePress={() => setModalVisible(true)}
-        placeholder="Arama kriteri giriniz"
-      />
+      {isContentReady && (
+        <>
+          <EntranceTransition delay={100}>
+            <RequestFilterBar
+              onSearch={setSearchKeyword}
+              onDatePress={() => setModalVisible(true)}
+              placeholder="Arama kriteri giriniz"
+            />
+          </EntranceTransition>
 
-      <View style={styles.headerContainer}>
-        <Text style={styles.title}>Geçmiş Talepler</Text>
-        <Text style={styles.subTitle}>{dateRangeText}</Text>
-      </View>
+          <EntranceTransition delay={220}>
+            <View style={styles.headerContainer}>
+              <Text style={styles.title}>Geçmiş Talepler</Text>
+              <Text style={styles.subTitle}>{dateRangeText}</Text>
+            </View>
+          </EntranceTransition>
 
-      <FilteredList
-        data={processedData}
-        openCategory={activeCategoryTitle}
-        onToggle={(categoryTitle) =>
-          setActiveCategoryTitle((prev) =>
-            prev === categoryTitle ? null : categoryTitle
-          )
-        }
-        onDetailsPress={(item) =>
-          router.push({
-            pathname: '/request/[id]',
-            params: { id: item.id },
-          })
-        }
-        selectedIds={selectedIds}
-        onSelect={() => {}}
-        variant="history"
-      />
+          <EntranceTransition delay={320} style={styles.listWrapper}>
+            <FilteredList
+              data={processedData}
+              openCategory={activeCategoryTitle}
+              onToggle={(categoryTitle) =>
+                setActiveCategoryTitle((prev) => (prev === categoryTitle ? null : categoryTitle))
+              }
+              onDetailsPress={(item) =>
+                router.push({
+                  pathname: '/request/[id]',
+                  params: { id: item.id },
+                })
+              }
+              selectedIds={[]}
+              onSelect={() => {}}
+              variant="history"
+            />
+          </EntranceTransition>
+        </>
+      )}
 
       <DateRangePickerModal
         visible={modalVisible}
@@ -108,7 +103,7 @@ export default function RequestHistoryScreen() {
         onSave={(rangeText) => {
           setDateRangeText(rangeText);
           setModalVisible(false);
-          fetchHistory();
+          fetchHistory(rangeText);
         }}
       />
 
@@ -124,23 +119,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingTop: 10,
   },
-
   headerContainer: {
     alignItems: 'center',
     marginTop: 15,
     marginBottom: 15,
   },
-
   title: {
     fontSize: 18,
     fontWeight: '500',
     color: '#1976D2',
     letterSpacing: 1,
   },
-
   subTitle: {
     fontSize: 14,
     color: '#888',
     marginTop: 4,
   },
+  listWrapper: { flex: 1 },
 });

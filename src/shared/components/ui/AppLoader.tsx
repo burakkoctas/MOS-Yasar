@@ -1,4 +1,3 @@
-// Path: src/shared/components/ui/AppLoader.tsx
 import React from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import LoadingArrow from './LoadingArrow';
@@ -14,11 +13,13 @@ export default function AppLoader({ visible }: AppLoaderProps) {
       animationType="fade"
       visible={visible}
       onRequestClose={() => {}}
-      statusBarTranslucent={true} // ŞEFİM DİKKAT: Android'de saat ve pili de örterek tam ekran olmasını sağlayan sihirli dokunuş
+      statusBarTranslucent={true}
+      presentationStyle="overFullScreen"
+      hardwareAccelerated={true}
     >
       <View style={styles.overlay}>
         <View style={styles.loaderCircle}>
-          <LoadingArrow size={36}/>
+          <LoadingArrow size={36} />
         </View>
       </View>
     </Modal>

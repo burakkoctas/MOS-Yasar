@@ -1,5 +1,4 @@
-// Path: src/features/request/components/RequestCardHeader.tsx
-import Checkbox from 'expo-checkbox';
+import ExpoCheckbox from 'expo-checkbox';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import StatusBadge from './StatusBadge';
@@ -8,14 +7,14 @@ interface HeaderProps {
   statusLabel: string;
   isSelected: boolean;
   onSelect: (value: boolean) => void;
-  showCheckbox?: boolean; // ŞEFİM: Geçmiş listesinde gizlemek için eklendi
+  showCheckbox?: boolean;
 }
 
-const RequestCardHeader: React.FC<HeaderProps> = ({ 
-  statusLabel, 
-  isSelected, 
+const RequestCardHeader: React.FC<HeaderProps> = ({
+  statusLabel,
+  isSelected,
   onSelect,
-  showCheckbox = true
+  showCheckbox = true,
 }) => {
   return (
     <View style={styles.headerContainer}>
@@ -24,18 +23,16 @@ const RequestCardHeader: React.FC<HeaderProps> = ({
       </View>
 
       {showCheckbox && (
-        <Pressable 
+        <Pressable
           style={styles.checkboxWrapper}
-          onPress={(e) => {
-            e.stopPropagation(); // Karta tıklamayı (detaya gitmeyi) engeller
-            onSelect(!isSelected); // Seçimi tersine çevir
-          }} 
-          // ŞEFİM: Görünmez tıklama alanını her yönden 15 birim genişlettik
+          onPress={(event) => {
+            event.stopPropagation();
+            onSelect(!isSelected);
+          }}
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
         >
-          {/* pointerEvents="none" sayesinde küçük kutu tıklamayı yutmaz, Pressable halleder */}
           <View pointerEvents="none">
-            <Checkbox
+            <ExpoCheckbox
               value={isSelected}
               color={isSelected ? '#1976D2' : undefined}
               style={styles.checkbox}

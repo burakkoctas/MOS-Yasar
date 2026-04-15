@@ -1,33 +1,30 @@
-// Path: src/features/request/screens/RequestListScreen.tsx
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-
 import FilteredList from '@/src/features/request/components/FilteredList';
 import RadioDateModal from '@/src/features/request/components/RadioDateModal';
 import ActionDrawer from '@/src/shared/components/ui/ActionDrawer';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
+import EntranceTransition from '@/src/shared/components/ui/EntranceTransition';
 import RequestFilterBar from '../components/RequestFilterBar';
-
-import { mockApi } from '@/src/shared/api/mockApi';
 import { useRequestFilter } from '../hooks/useRequestFilter';
+import { requestService } from '../services/requestService';
 import { CategoryGroup } from '../types';
 
 export default function RequestListScreen() {
   const router = useRouter();
-
   const [allRequests, setAllRequests] = useState<CategoryGroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isContentReady, setIsContentReady] = useState(false);
   const [activeCategoryTitle, setActiveCategoryTitle] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-
   const { searchKeyword, setSearchKeyword, processedData } = useRequestFilter(allRequests);
 
   const availableDates = useMemo(() => {
     const dates = new Set<string>();
-    allRequests.forEach(group => {
-      (group.data || []).forEach(item => {
+    allRequests.forEach((group) => {
+      group.data.forEach((item) => {
         if (item.baslangic && item.baslangic !== '-') {
           dates.add(item.baslangic);
         }
@@ -36,41 +33,34 @@ export default function RequestListScreen() {
     return Array.from(dates).sort();
   }, [allRequests]);
 
-  // ŞEFİM DİKKAT: Veri çekme fonksiyonu
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    setIsContentReady(false);
     setIsLoading(true);
     try {
-      const data = await mockApi.getRequests();
-      setAllRequests(data as CategoryGroup[]);
-    } catch (error) {
-      console.error("Veri yüklenirken hata oluştu:", error);
+      const data = await requestService.getRequests();
+      setAllRequests(data);
+      setIsContentReady(true);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  // PROFESYONEL YENİLEME: Her odaklanıldığında (sekme geçişinde) çalışır
   useFocusEffect(
     useCallback(() => {
-      // 1. Önce listeyi sıfırla (Böylece animasyonun yeniden çalışması için bileşenler yenilenir)
-      setAllRequests([]);
-      // 2. Diğer state'leri temizle
-      setActiveCategoryTitle(null);
-      setSearchKeyword('');
-      setSelectedIds([]);
-      // 3. Yeni isteği at
       fetchData();
-    }, [])
+    }, [fetchData]),
   );
 
-  const handleActionComplete = async (ids: string[], action: 'APPROVE' | 'REJECT') => {
+  const handleActionComplete = async (action: 'APPROVE' | 'REJECT') => {
+    if (selectedIds.length === 0) {
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await mockApi.processAction(ids, action);
+      await requestService.processAction(selectedIds, action);
       setSelectedIds([]);
       await fetchData();
-    } catch (error) {
-      console.error("İşlem sırasında hata:", error);
     } finally {
       setIsLoading(false);
     }
@@ -78,39 +68,50 @@ export default function RequestListScreen() {
 
   return (
     <View style={styles.container}>
-      <RequestFilterBar
-        onSearch={setSearchKeyword}
-        onDatePress={() => setModalVisible(true)}
-        placeholder="Arama kriteri giriniz"
-      />
+      {isContentReady && (
+        <>
+          <EntranceTransition delay={100}>
+            <RequestFilterBar
+              onSearch={setSearchKeyword}
+              onDatePress={() => setModalVisible(true)}
+              placeholder="Arama kriteri giriniz"
+              value={searchKeyword}
+            />
+          </EntranceTransition>
 
-      <View style={styles.headerContainer}>
-        <Text style={styles.title}>Talep Listesi</Text>
-        <View style={styles.spacingPlaceholder} />
-      </View>
+          <EntranceTransition delay={220}>
+            <View style={styles.headerContainer}>
+              <Text style={styles.title}>Talep Listesi</Text>
+              <View style={styles.spacingPlaceholder} />
+            </View>
+          </EntranceTransition>
 
-      <FilteredList
-        data={processedData}
-        selectedIds={selectedIds}
-        variant="request"
-        onSelect={(id, val) => {
-          setSelectedIds(prev => val ? [...prev, id] : prev.filter(x => x !== id));
+          <EntranceTransition delay={320} style={styles.listWrapper}>
+            <FilteredList
+              data={processedData}
+              selectedIds={selectedIds}
+              variant="request"
+              onSelect={(id, value) => {
+                setSelectedIds((prev) =>
+                  value ? [...prev, id] : prev.filter((itemId) => itemId !== id),
+                );
+              }}
+              openCategory={activeCategoryTitle}
+              onToggle={(categoryTitle) => {
+                setActiveCategoryTitle((prev) => (prev === categoryTitle ? null : categoryTitle));
+              }}
+              onDetailsPress={(item) =>
+                router.push({
+                  pathname: '/request/[id]',
+                  params: { id: item.id },
+                })
+              }
+            />
+          </EntranceTransition>
+        </>
+      )}
 
-        }}
-        openCategory={activeCategoryTitle}
-        onToggle={(categoryTitle) => {
-          setActiveCategoryTitle(prev => prev === categoryTitle ? null : categoryTitle);
-        }}
-        onDetailsPress={(item) => router.push({
-          pathname: "/request/[id]",
-          params: { id: item.id }
-        })}
-      />
-
-      <ActionDrawer
-        selectedIds={selectedIds}
-        onActionComplete={() => handleActionComplete(selectedIds, 'APPROVE')}
-      />
+      <ActionDrawer selectedIds={selectedIds} onActionComplete={handleActionComplete} />
 
       <RadioDateModal
         visible={modalVisible}
@@ -133,4 +134,5 @@ const styles = StyleSheet.create({
   headerContainer: { alignItems: 'center', marginTop: 15, marginBottom: 15 },
   title: { fontSize: 18, fontWeight: '500', color: '#1976D2', letterSpacing: 1 },
   spacingPlaceholder: { height: 23 },
+  listWrapper: { flex: 1 },
 });

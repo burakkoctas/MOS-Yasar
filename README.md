@@ -1,50 +1,39 @@
-# Welcome to your Expo app 👋
+# MOS Yasar
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Expo tabanli mobil uygulama. Proje, talep onay akislarini ve vekalet yonetimini tek bir mobil deneyimde toplamak icin hazirlaniyor.
 
-## Get started
+## Mevcut Kapsam
 
-1. Install dependencies
+- Giris ve kayit ekranlari
+- Talep listesi ve gecmis talepler
+- Talep detay ekrani
+- Aktif ve gecmis vekalet ekranlari
 
-   ```bash
-   npm install
-   ```
+## Teknik Yapi
 
-2. Start the app
+- Expo Router ile dosya tabanli navigation
+- Feature-based klasorleme
+- Mock servis katmani
+- Backend entegrasyonuna hazir API client iskeleti
 
-   ```bash
-   npx expo start
-   ```
+## Gelistirme
 
-In the output, you'll find options to open the app in a
+1. Bagimliliklari yukleyin.
+   `npm install`
+2. Uygulamayi baslatin.
+   `npm run start`
+3. Lint calistirin.
+   `npm run lint`
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Backend Hazirligi
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Backend servisleri hazir oldugunda asagidaki mock servisler remote adapterlar ile degistirilebilir:
 
-## Get a fresh project
+- `src/features/auth/services/authService.ts`
+- `src/features/request/services/requestService.ts`
+- `src/features/delegate/services/delegateService.ts`
+- `src/shared/api/apiClient.ts`
 
-When you're ready, run:
+## Not
 
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Su anki davranislarin bir kismi mock veriyle calisir. Bu durum arayuzun gelistirilmesini engellememek icin korunmustur; ancak servis baglantilari geldikce ayni kontratlar uzerinden gercek API cagrilarina gecilmesi hedeflenmistir.

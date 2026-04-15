@@ -1,17 +1,20 @@
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import CustomCalendarIcon from '../../../shared/components/icons/CustomCalendarIcon';
 
 interface RequestFilterBarProps {
   onSearch: (text: string) => void;
   onDatePress: () => void;
   placeholder?: string;
+  value?: string;
 }
 
-export default function RequestFilterBar({ 
-  onSearch, 
-  onDatePress, 
-  placeholder = "Arama kriteri giriniz." 
+export default function RequestFilterBar({
+  onSearch,
+  onDatePress,
+  placeholder = 'Arama kriteri giriniz.',
+  value,
 }: RequestFilterBarProps) {
   const todayDay = new Date().getDate();
 
@@ -24,13 +27,14 @@ export default function RequestFilterBar({
           placeholder={placeholder}
           placeholderTextColor="#1976D2"
           onChangeText={onSearch}
+          value={value}
           selectionColor="#1976D2"
         />
       </View>
 
       <TouchableOpacity style={styles.dateButton} onPress={onDatePress}>
         <View style={styles.iconWrapper}>
-          <Feather name="calendar" size={40} color="#1976D2" />
+          <CustomCalendarIcon size={30} color="#1976D2" />
           <Text style={styles.dayText}>{todayDay}</Text>
         </View>
       </TouchableOpacity>
@@ -53,5 +57,5 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 16, color: '#1976D2', fontWeight: '500' },
   dateButton: { justifyContent: 'center', alignItems: 'center' },
   iconWrapper: { justifyContent: 'center', alignItems: 'center', position: 'relative' },
-  dayText: { position: 'absolute', top: 17, fontSize: 16, fontWeight: 'bold', color: '#1976D2', textAlign: 'center', includeFontPadding: false },
+  dayText: { position: 'absolute', top: 12, fontSize: 13, fontWeight: 'bold', color: '#1976D2', textAlign: 'center', includeFontPadding: false },
 });

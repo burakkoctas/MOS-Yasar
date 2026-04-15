@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { Animated, LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { RequestItem as RequestItemType } from '../types';
 import CategoryHeader from './CategoryHeader';
 import RequestItem from './RequestItem';
@@ -29,6 +29,8 @@ export default function AccordionCategory({
 }: AccordionCategoryProps) {
   const animatedController = useRef(new Animated.Value(expanded ? 1 : 0)).current;
   const [contentHeight, setContentHeight] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(15)).current;
 
   useEffect(() => {
     Animated.timing(animatedController, {
@@ -36,25 +38,7 @@ export default function AccordionCategory({
       duration: 300,
       useNativeDriver: false,
     }).start();
-  }, [expanded]);
-
-  const bodyHeight = animatedController.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, contentHeight],
-  });
-
-  const categoryIds = requests.map(r => r.id);
-
-  const isAllSelected =
-    categoryIds.length > 0 &&
-    categoryIds.every(id => selectedIds.includes(id));
-
-  const handleToggleCategory = (value: boolean) => {
-    requests.forEach(req => onSelect(req.id, value));
-  };
-
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(15)).current;
+  }, [animatedController, expanded]);
 
   useEffect(() => {
     Animated.parallel([
@@ -71,7 +55,28 @@ export default function AccordionCategory({
         useNativeDriver: true,
       }),
     ]).start();
-  }, [index]);
+  }, [fadeAnim, index, slideAnim]);
+
+  const bodyHeight = animatedController.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, contentHeight],
+  });
+
+  const categoryIds = requests.map((request) => request.id);
+  const isAllSelected =
+    categoryIds.length > 0 &&
+    categoryIds.every((requestId) => selectedIds.includes(requestId));
+
+  const handleToggleCategory = (value: boolean) => {
+    requests.forEach((request) => onSelect(request.id, value));
+  };
+
+  const handleContentLayout = (event: LayoutChangeEvent) => {
+    const nextHeight = event.nativeEvent.layout.height;
+    if (nextHeight !== contentHeight) {
+      setContentHeight(nextHeight);
+    }
+  };
 
   return (
     <Animated.View
@@ -92,20 +97,16 @@ export default function AccordionCategory({
 
       <Animated.View style={[styles.drawer, { height: bodyHeight }]}>
         <View
+          key={`${title}-${requests.length}-${requests.map((request) => request.id).join('-')}`}
           style={styles.contentWrapper}
-          onLayout={(event) => {
-            const { height } = event.nativeEvent.layout;
-            if (height > 0 && contentHeight === 0) {
-              setContentHeight(height);
-            }
-          }}
+          onLayout={handleContentLayout}
         >
-          {requests.map((req) => (
+          {requests.map((request) => (
             <RequestItem
-              key={req.id}
-              requestData={req}
+              key={request.id}
+              requestData={request}
               onItemPress={onDetailsPress}
-              isSelected={selectedIds.includes(req.id)}
+              isSelected={selectedIds.includes(request.id)}
               onSelect={onSelect}
               showCheckbox={variant === 'request'}
             />
@@ -122,7 +123,6 @@ const styles = StyleSheet.create({
   contentWrapper: {
     paddingTop: 10,
     paddingHorizontal: 5,
-    position: 'absolute',
     width: '100%',
   },
 });

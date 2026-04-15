@@ -1,5 +1,3 @@
-// Path: src/features/request/types.ts
-
 export interface RequestItem {
   id: string;
   istekNo: string;
@@ -9,7 +7,6 @@ export interface RequestItem {
   baslangic: string;
   bitis: string;
   onayDurumu: string;
-  // Detay ekranındaki sahte veri (dummy detail) ile tam uyumlu olması için opsiyonel alanlar
   isim?: string;
   tarih?: string;
   belgeNo?: string;
@@ -22,4 +19,13 @@ export interface RequestItem {
 export interface CategoryGroup {
   category: string;
   data: RequestItem[];
+}
+
+export interface RequestDateRange {
+  start: Date;
+  end: Date;
+}
+
+export interface RequestQuery {
+  range?: RequestDateRange | null;
 }

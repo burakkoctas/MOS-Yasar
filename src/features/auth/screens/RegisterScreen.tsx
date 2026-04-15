@@ -1,10 +1,12 @@
-// Path: src/features/auth/screens/RegisterScreen.tsx
+import { authService } from '@/src/features/auth/services/authService';
+import AppLoader from '@/src/shared/components/ui/AppLoader';
 import CustomFabIcon from '@/src/shared/components/ui/CustomFabIcon';
 import YasarBilgiLogo from '@/src/shared/components/ui/YasarBilgiLogo';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -17,14 +19,30 @@ import {
 
 export default function RegisterScreen() {
   const router = useRouter();
-
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleRegister = () => {
-    console.log("Kayıt olunuyor:", { firstName, lastName, email });
-    router.back();
+  const handleRegister = async () => {
+    setIsSubmitting(true);
+    try {
+      await authService.register({
+        firstName,
+        lastName,
+        email,
+      });
+      Alert.alert(
+        'Bilgi',
+        'Kayıt isteği hazırlandı. Servis bağlantısı geldiğinde gerçek akış eklenecek.',
+      );
+      router.back();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Kayıt tamamlanamadı.';
+      Alert.alert('Kayıt Başarısız', message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -35,7 +53,7 @@ export default function RegisterScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          headerTitle: "",
+          headerTitle: '',
           headerTransparent: false,
           headerShadowVisible: false,
           headerStyle: { backgroundColor: '#FAFAFA' },
@@ -47,14 +65,11 @@ export default function RegisterScreen() {
             >
               <Ionicons name="arrow-back" size={28} color="#1976D2" />
             </TouchableOpacity>
-          )
+          ),
         }}
       />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.logoContainer}>
           <View style={styles.iconWrapper}>
             <CustomFabIcon size={55} color="#1976D2" />
@@ -63,7 +78,6 @@ export default function RegisterScreen() {
         </View>
 
         <View style={styles.formContainer}>
-
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.input}
@@ -96,14 +110,9 @@ export default function RegisterScreen() {
             />
           </View>
 
-          <TouchableOpacity
-            style={styles.registerButton}
-            onPress={handleRegister}
-            activeOpacity={0.8}
-          >
+          <TouchableOpacity style={styles.registerButton} onPress={handleRegister} activeOpacity={0.8}>
             <Text style={styles.registerButtonText}>Üye Ol</Text>
           </TouchableOpacity>
-
         </View>
       </ScrollView>
 
@@ -111,15 +120,13 @@ export default function RegisterScreen() {
         <YasarBilgiLogo width={120} height={19} />
       </View>
 
+      <AppLoader visible={isSubmitting} />
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-  },
+  container: { flex: 1, backgroundColor: '#FAFAFA' },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -127,10 +134,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 100,
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
+  logoContainer: { alignItems: 'center', marginBottom: 40 },
   iconWrapper: {
     width: 100,
     height: 100,
@@ -148,22 +152,16 @@ const styles = StyleSheet.create({
     color: '#1976D2',
     letterSpacing: 0.5,
   },
-  formContainer: {
-    width: '100%',
-  },
-  inputWrapper: {
-    marginBottom: 20,
-  },
-
-  // ŞEFİM: Giriş ekranındaki gibi daha zarif ölçülere çekildi
+  formContainer: { width: '100%' },
+  inputWrapper: { marginBottom: 20 },
   input: {
     backgroundColor: '#FFF',
     borderWidth: 1,
     borderColor: '#EBEBEB',
-    borderRadius: 12, // 15'ten 12'ye düşürüldü
-    paddingVertical: 14, // Yükseklik daraltıldı
+    borderRadius: 12,
+    paddingVertical: 14,
     paddingHorizontal: 16,
-    fontSize: 15, // Yazı boyutu bir tık küçültüldü
+    fontSize: 15,
     color: '#333',
     elevation: 1,
     shadowColor: '#000',
@@ -171,12 +169,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
   },
-
-  // ŞEFİM: Buton yüksekliği ve köşe yuvarlaması inceltildi
   registerButton: {
     backgroundColor: '#1976D2',
-    paddingVertical: 14, // 18'den 14'e düşürüldü
-    borderRadius: 25, // 30'dan 25'e düşürüldü
+    paddingVertical: 14,
+    borderRadius: 25,
     alignItems: 'center',
     marginTop: 20,
     shadowColor: '#1976D2',
@@ -187,21 +183,14 @@ const styles = StyleSheet.create({
   },
   registerButtonText: {
     color: '#FFF',
-    fontSize: 16, // 18'den 16'ya düşürüldü
+    fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 1,
   },
-
   footer: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 40 : 20,
     width: '100%',
     alignItems: 'center',
-  },
-  footerBrand: {
-    fontWeight: 'bold',
-    color: '#A0A0A0',
-    fontSize: 13,
-    letterSpacing: 1,
   },
 });
