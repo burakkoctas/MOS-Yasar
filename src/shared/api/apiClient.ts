@@ -19,7 +19,8 @@ export class FetchApiClient implements ApiClient {
   constructor(private readonly baseUrl: string) {}
 
   async request<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`, {
+    const requestUrl = path.startsWith('http') ? path : `${this.baseUrl}${path}`;
+    const response = await fetch(requestUrl, {
       method: options.method ?? 'GET',
       headers: {
         ...DEFAULT_HEADERS,

@@ -1,5 +1,5 @@
 export interface LoginPayload {
-  email: string;
+  username: string;
   password: string;
   rememberMe: boolean;
 }
@@ -19,10 +19,13 @@ export interface AuthUser {
   fullName: string;
   email: string;
   company: string;
+  roles: string[];
+  username: string;
 }
 
 export interface AuthSession {
   user: AuthUser;
   accessToken: string;
+  refreshToken?: string;
   mode: 'mock' | 'remote';
 }

@@ -59,7 +59,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderWidth: 1,
     borderColor: '#e0e0e0',
-    elevation: 2,
+    overflow: 'hidden',
+    // Accordion animasyonu sirasinda siyah golge izleri olusmamasi icin
+    // kart ayiricisini shadow yerine border ile veriyoruz.
+    shadowColor: '#DCE6F2',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
   },
 });
 

@@ -6,6 +6,7 @@ import RadioDateModal from '@/src/features/request/components/RadioDateModal';
 import ActionDrawer from '@/src/shared/components/ui/ActionDrawer';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import EntranceTransition from '@/src/shared/components/ui/EntranceTransition';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import RequestFilterBar from '../components/RequestFilterBar';
 import { useRequestFilter } from '../hooks/useRequestFilter';
 import { requestService } from '../services/requestService';
@@ -13,6 +14,7 @@ import { CategoryGroup } from '../types';
 
 export default function RequestListScreen() {
   const router = useRouter();
+  const { session } = useAuthStore();
   const [allRequests, setAllRequests] = useState<CategoryGroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isContentReady, setIsContentReady] = useState(false);
@@ -20,6 +22,7 @@ export default function RequestListScreen() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const { searchKeyword, setSearchKeyword, processedData } = useRequestFilter(allRequests);
+  const canBulkApprove = session?.user.roles.includes('bulk_approve') ?? false;
 
   const availableDates = useMemo(() => {
     const dates = new Set<string>();
@@ -91,6 +94,7 @@ export default function RequestListScreen() {
               data={processedData}
               selectedIds={selectedIds}
               variant="request"
+              showSelection={canBulkApprove}
               onSelect={(id, value) => {
                 setSelectedIds((prev) =>
                   value ? [...prev, id] : prev.filter((itemId) => itemId !== id),
@@ -103,7 +107,7 @@ export default function RequestListScreen() {
               onDetailsPress={(item) =>
                 router.push({
                   pathname: '/request/[id]',
-                  params: { id: item.id },
+                  params: { id: item.id, source: 'request' },
                 })
               }
             />

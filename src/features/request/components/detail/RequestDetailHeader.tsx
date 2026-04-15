@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 interface RequestDetailHeaderProps {
   title: string;
   onBack: () => void;
-  onDelete: () => void;
+  onDelete?: () => void;
   topInset: number;
 }
 
@@ -23,9 +23,13 @@ export default function RequestDetailHeader({
       <View style={styles.headerTitleWrapper}>
         <Text style={styles.headerTitle}>{title}</Text>
       </View>
-      <Pressable style={styles.headerSideButton} onPress={onDelete}>
-        <Ionicons name="trash-outline" size={23} color="#1976D2" />
-      </Pressable>
+      {onDelete ? (
+        <Pressable style={styles.headerSideButton} onPress={onDelete}>
+          <Ionicons name="trash-outline" size={23} color="#1976D2" />
+        </Pressable>
+      ) : (
+        <View style={styles.headerSideButton} />
+      )}
     </View>
   );
 }

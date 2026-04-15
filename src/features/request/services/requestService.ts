@@ -1,9 +1,7 @@
 import { appConfig } from '@/src/config/appConfig';
 import {
-  RequestActionDto,
-  RequestCategoryDto,
-  RequestItemDto,
-  RequestListQueryDto,
+  RemoteRequestItemDto,
+  RemoteRequestListResponseDto,
 } from '@/src/features/request/api/contracts';
 import {
   CategoryGroup,
@@ -13,8 +11,13 @@ import {
 } from '@/src/features/request/types';
 import { createApiClient } from '@/src/shared/api/apiClient';
 import { DUMMY_DATA } from '@/src/shared/api/mockData';
+import { authStore } from '@/src/store/useAuthStore';
 
 const DELAY = 250;
+const REMOTE_REQUESTS_BASE_URL = 'https://mos-tst.yasar.com.tr';
+const GET_REQUESTS_SINGLE_PATH = '/mos/api/v3/GetRequestsSingle';
+
+let remoteGroupsCache: CategoryGroup[] = [];
 
 function wait() {
   return new Promise((resolve) => setTimeout(resolve, DELAY));
@@ -41,14 +44,6 @@ function parseTurkishDate(value?: string) {
   return new Date(year, month - 1, day);
 }
 
-function formatTurkishDate(date: Date) {
-  return date.toLocaleDateString('tr-TR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
-
 function isInRange(date: Date | null, range?: RequestDateRange | null) {
   if (!range) {
     return true;
@@ -65,9 +60,9 @@ function createRequestDetails(item: RequestItem): RequestItem {
   return {
     ...item,
     isim: item.gonderen,
-    tarih: item.baslangic,
-    belgeNo: `BEL-${item.istekNo}`,
-    acilis: item.baslangic,
+    tarih: item.tarih ?? item.baslangic,
+    belgeNo: item.belgeNo ?? `BEL-${item.istekNo}`,
+    acilis: item.acilis ?? item.baslangic,
     modul: item.modul ?? 'SAP Workflow',
     kategori: item.kategori ?? item.sirket,
     aciklama:
@@ -76,40 +71,149 @@ function createRequestDetails(item: RequestItem): RequestItem {
   };
 }
 
-function mapRequestDtoToDomain(item: RequestItemDto): RequestItem {
+function normalizeSearchText(value: string) {
+  return value
+    .toLocaleLowerCase('tr-TR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function parseDescriptionValue(lines: string[], labels: string[]) {
+  const normalizedLabels = labels.map(normalizeSearchText);
+  const matchedLine = lines.find((line) => {
+    const [rawLabel] = line.split(':');
+    return rawLabel ? normalizedLabels.includes(normalizeSearchText(rawLabel.trim())) : false;
+  });
+
+  if (!matchedLine) {
+    return undefined;
+  }
+
+  const [, ...valueParts] = matchedLine.split(':');
+  const value = valueParts.join(':').trim();
+  return value || undefined;
+}
+
+function parseRequestDate(value?: string) {
+  if (!value) {
+    return '-';
+  }
+
+  const [datePart] = value.split(',');
+  if (!datePart) {
+    return value;
+  }
+
+  const [day, month, year] = datePart.split('-').map(Number);
+  if (!day || !month || !year) {
+    return datePart;
+  }
+
+  return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
+}
+
+function deriveStatusText(item: RemoteRequestItemDto) {
+  const normalizedOperationNames = item.operations.map((operation) =>
+    operation.operationName.toLocaleLowerCase('tr-TR'),
+  );
+
+  if (normalizedOperationNames.some((name) => name.includes('onay'))) {
+    return 'Onay Bekliyor';
+  }
+
+  if (normalizedOperationNames.some((name) => name.includes('ret'))) {
+    return 'Islem Bekliyor';
+  }
+
+  return `Durum ${item.status}`;
+}
+
+function deriveApprovalStatus(item: RemoteRequestItemDto) {
+  if (item.multipleApprove) {
+    return 'Toplu Onaylanabilir';
+  }
+
+  if (item.approvalRequiresDescription) {
+    return 'Aciklama Gerekli';
+  }
+
+  return 'Beklemede';
+}
+
+function mapRemoteRequestToDomain(item: RemoteRequestItemDto): RequestItem {
+  const company =
+    parseDescriptionValue(item.descriptionList, ['Sirket', 'Satis Org']) ??
+    item.subSubject ??
+    item.subject;
+  const startDate =
+    parseDescriptionValue(item.descriptionList, [
+      'Aktivite Baslangic Tarihi',
+      'Baslangic Tarihi',
+      'Acilis Tarihi',
+    ]) ?? parseRequestDate(item.requestDate);
+  const endDate =
+    parseDescriptionValue(item.descriptionList, ['Aktivite Bitis Tarihi', 'Bitis Tarihi']) ?? '-';
+  const moduleName =
+    parseDescriptionValue(item.descriptionList, ['Modul']) ?? item.subject;
+  const categoryName =
+    parseDescriptionValue(item.descriptionList, ['Kategori']) ?? item.subject;
+
   return {
-    id: item.id,
-    istekNo: item.requestNo,
-    gonderen: item.senderName,
-    sirket: item.companyName,
-    statu: item.workflowStatus,
-    baslangic: item.startDate,
-    bitis: item.endDate,
-    onayDurumu: item.approvalStatus,
-    isim: item.displayName,
-    belgeNo: item.documentNo,
-    modul: item.moduleName,
-    kategori: item.categoryName,
+    id: item.requestId,
+    istekNo: item.referenceDocument,
+    gonderen: item.requesterFullName,
+    sirket: company,
+    statu: deriveStatusText(item),
+    baslangic: startDate,
+    bitis: endDate,
+    onayDurumu: deriveApprovalStatus(item),
+    isim: item.requesterFullName,
+    tarih: parseRequestDate(item.requestDate),
+    belgeNo: item.referenceDocument,
+    acilis: startDate,
+    modul: moduleName,
+    kategori: categoryName,
     aciklama: item.description,
   };
 }
 
-function mapCategoryDtoToDomain(category: RequestCategoryDto): CategoryGroup {
-  return {
-    category: category.categoryName,
-    data: category.items.map(mapRequestDtoToDomain),
-  };
+function mapRemoteResponseToGroups(items: RemoteRequestItemDto[]): CategoryGroup[] {
+  const groupedRequests = new Map<string, RequestItem[]>();
+
+  items.forEach((item) => {
+    const category = item.subject?.trim() || 'Diger';
+    const requestItem = mapRemoteRequestToDomain(item);
+    const existingGroup = groupedRequests.get(category) ?? [];
+    existingGroup.push(requestItem);
+    groupedRequests.set(category, existingGroup);
+  });
+
+  return Array.from(groupedRequests.entries()).map(([category, data]) => ({
+    category,
+    data,
+  }));
 }
 
-function mapQueryToDto(query?: RequestQuery): RequestListQueryDto {
-  return {
-    startDate: query?.range?.start ? formatTurkishDate(query.range.start) : undefined,
-    endDate: query?.range?.end ? formatTurkishDate(query.range.end) : undefined,
-  };
+function getRemoteRequestToken() {
+  return authStore.getState().session?.accessToken;
 }
 
-function mapActionToDto(ids: string[], action: 'APPROVE' | 'REJECT'): RequestActionDto {
-  return { ids, action };
+function isRemoteRequestListEnabled() {
+  return Boolean(getRemoteRequestToken());
+}
+
+function getCachedRemoteRequestById(id: string) {
+  for (const group of remoteGroupsCache) {
+    const match = group.data.find((item) => item.id === id);
+    if (match) {
+      return createRequestDetails({
+        ...match,
+        kategori: match.kategori ?? group.category,
+      });
+    }
+  }
+
+  return null;
 }
 
 const mockGroups = cloneGroups(DUMMY_DATA as CategoryGroup[]);
@@ -175,39 +279,62 @@ const mockRequestService: RequestService = {
   },
 };
 
-const apiClient = createApiClient(appConfig.api.baseUrl);
+const apiClient = createApiClient(appConfig.api.baseUrl || REMOTE_REQUESTS_BASE_URL);
 
 const remoteRequestService: RequestService = {
   async getRequests() {
-    const response = await apiClient.request<RequestCategoryDto[]>('/requests');
-    return response.map(mapCategoryDtoToDomain);
+    const accessToken = getRemoteRequestToken();
+
+    if (!accessToken) {
+      return mockRequestService.getRequests();
+    }
+
+    const response = await apiClient.request<RemoteRequestListResponseDto>(GET_REQUESTS_SINGLE_PATH, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const groups = mapRemoteResponseToGroups(response.data ?? []);
+    remoteGroupsCache = cloneGroups(groups);
+
+    return groups;
   },
 
-  async getRequestHistory(query?: RequestQuery) {
-    const queryDto = mapQueryToDto(query);
-    const queryString = new URLSearchParams(
-      Object.entries(queryDto).filter(([, value]) => Boolean(value)) as [string, string][],
-    ).toString();
-    const path = queryString ? `/requests/history?${queryString}` : '/requests/history';
-    const response = await apiClient.request<RequestCategoryDto[]>(path);
-    return response.map(mapCategoryDtoToDomain);
+  async getRequestHistory(_query?: RequestQuery) {
+    return mockRequestService.getRequestHistory(_query);
   },
 
   async getRequestById(id: string) {
-    const response = await apiClient.request<RequestItemDto>(`/requests/${id}`);
-    return createRequestDetails(mapRequestDtoToDomain(response));
+    return getCachedRemoteRequestById(id) ?? mockRequestService.getRequestById(id);
   },
 
   async processAction(ids: string[], action: 'APPROVE' | 'REJECT') {
-    await apiClient.request('/requests/actions', {
-      method: 'POST',
-      body: mapActionToDto(ids, action),
-    });
+    await mockRequestService.processAction(ids, action);
   },
 };
 
-export const requestService: RequestService =
-  appConfig.api.mode === 'remote' ? remoteRequestService : mockRequestService;
+export const requestService: RequestService = {
+  getRequests() {
+    return isRemoteRequestListEnabled()
+      ? remoteRequestService.getRequests()
+      : mockRequestService.getRequests();
+  },
+
+  getRequestHistory(query?: RequestQuery) {
+    return mockRequestService.getRequestHistory(query);
+  },
+
+  getRequestById(id: string) {
+    return isRemoteRequestListEnabled()
+      ? remoteRequestService.getRequestById(id)
+      : mockRequestService.getRequestById(id);
+  },
+
+  processAction(ids: string[], action: 'APPROVE' | 'REJECT') {
+    return mockRequestService.processAction(ids, action);
+  },
+};
 
 export function parseDateRangeText(rangeText: string): RequestDateRange | null {
   const [rawStart, rawEnd] = rangeText.split(' - ');

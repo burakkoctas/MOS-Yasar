@@ -1,17 +1,22 @@
-// Path: app/(tabs)/_layout.tsx
 import MainBottomNavbar from '@/src/shared/components/ui/MainBottomNavbar';
-import { Tabs } from 'expo-router';
+import { useAuthStore } from '@/src/store/useAuthStore';
+import { Redirect, Tabs } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
+  const { isAuthenticated } = useAuthStore();
+
+  if (!isAuthenticated) {
+    return <Redirect href="/login" />;
+  }
+
   return (
-    // DİKKAT: Global Safe Area! Sadece üst kısmı korur, alt kısmı Navbar halleder.
     <SafeAreaView edges={['top']} style={styles.safeArea}>
       <Tabs
-        screenOptions={{ 
+        screenOptions={{
           headerShown: false,
-          tabBarHideOnKeyboard: true 
+          tabBarHideOnKeyboard: true,
         }}
         tabBar={() => <MainBottomNavbar />}
       >
@@ -24,8 +29,8 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { 
-    flex: 1, 
-    backgroundColor: '#fff' // Arka planın sayfalara uyumlu olması kritik
-  }
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
 });

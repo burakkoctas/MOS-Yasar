@@ -14,10 +14,11 @@ import { RequestItem } from '../types';
 export default function RequestDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, source } = useLocalSearchParams<{ id: string; source?: string }>();
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [request, setRequest] = useState<RequestItem | null>(null);
+  const isHistoryView = source === 'history';
 
   const loadRequest = useCallback(async () => {
     if (!id) {
@@ -67,7 +68,7 @@ export default function RequestDetailScreen() {
         title="Talep Detay"
         topInset={insets.top}
         onBack={() => router.back()}
-        onDelete={() => setIsDeleteModalVisible(true)}
+        onDelete={!isHistoryView ? () => setIsDeleteModalVisible(true) : undefined}
       />
 
       {request && (
@@ -76,7 +77,7 @@ export default function RequestDetailScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={[
               styles.scrollContent,
-              { paddingBottom: insets.bottom + 130 },
+              { paddingBottom: insets.bottom + (isHistoryView ? 24 : 130) },
             ]}
           >
             <View style={styles.statusBar}>
@@ -115,18 +116,22 @@ export default function RequestDetailScreen() {
             </RequestDetailSection>
           </ScrollView>
 
-          <ConfirmModal
-            visible={isDeleteModalVisible}
-            title="Uyarı"
-            message="İstek yalnızca bu cihazdaki listeden kaldırılacak. Talep oluşturan kişiye iletilmeyecektir."
-            onCancel={() => setIsDeleteModalVisible(false)}
-            onConfirm={() => {
-              setIsDeleteModalVisible(false);
-              router.back();
-            }}
-          />
+          {!isHistoryView && (
+            <>
+              <ConfirmModal
+                visible={isDeleteModalVisible}
+                title="Uyarı"
+                message="İstek yalnızca bu cihazdaki listeden kaldırılacak. Talep oluşturan kişiye iletilmeyecektir."
+                onCancel={() => setIsDeleteModalVisible(false)}
+                onConfirm={() => {
+                  setIsDeleteModalVisible(false);
+                  router.back();
+                }}
+              />
 
-          <ActionDrawer selectedIds={[request.id]} onActionComplete={handleActionComplete} />
+              <ActionDrawer selectedIds={[request.id]} onActionComplete={handleActionComplete} />
+            </>
+          )}
         </>
       )}
 

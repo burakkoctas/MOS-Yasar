@@ -1,5 +1,5 @@
 export interface LoginRequestDto {
-  email: string;
+  username: string;
   password: string;
   rememberMe?: boolean;
 }
@@ -19,11 +19,32 @@ export interface AuthUserDto {
   fullName: string;
   email: string;
   company: string;
+  roles: string[];
+  username: string;
 }
 
 export interface LoginResponseDto {
-  accessToken: string;
-  user: AuthUserDto;
+  access_token: string;
+  expires_in: number;
+  refresh_expires_in: number;
+  refresh_token: string;
+  token_type: string;
+  'not-before-policy': number;
+  session_state: string;
+  scope: string;
+}
+
+export interface LoginErrorResponseDto {
+  error?: string;
+  error_description?: string;
+}
+
+export interface VersionCheckResponseDto {
+  code: number;
+  message: string;
+  data: unknown;
+  dataList: unknown;
+  title: string | null;
 }
 
 export interface PasswordResetResponseDto {

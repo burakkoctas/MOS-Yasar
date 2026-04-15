@@ -14,6 +14,7 @@ interface AccordionCategoryProps {
   selectedIds: string[];
   onSelect: (id: string, isSelected: boolean) => void;
   variant?: 'request' | 'history';
+  showSelection?: boolean;
 }
 
 export default function AccordionCategory({
@@ -26,6 +27,7 @@ export default function AccordionCategory({
   selectedIds,
   onSelect,
   variant = 'request',
+  showSelection = true,
 }: AccordionCategoryProps) {
   const animatedController = useRef(new Animated.Value(expanded ? 1 : 0)).current;
   const [contentHeight, setContentHeight] = useState(0);
@@ -92,7 +94,7 @@ export default function AccordionCategory({
         onToggle={onToggle}
         isAllSelected={isAllSelected}
         onSelectAll={handleToggleCategory}
-        showCheckbox={variant === 'request'}
+        showCheckbox={variant === 'request' && showSelection}
       />
 
       <Animated.View style={[styles.drawer, { height: bodyHeight }]}>
@@ -108,7 +110,7 @@ export default function AccordionCategory({
               onItemPress={onDetailsPress}
               isSelected={selectedIds.includes(request.id)}
               onSelect={onSelect}
-              showCheckbox={variant === 'request'}
+              showCheckbox={variant === 'request' && showSelection}
             />
           ))}
         </View>

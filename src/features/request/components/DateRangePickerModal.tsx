@@ -54,6 +54,13 @@ function formatDateInput(value: string) {
   return `${digits.slice(0, 2)}.${digits.slice(2, 4)}.${digits.slice(4)}`;
 }
 
+function toCalendarDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function parseInputToCalendarDate(value: string) {
   const parts = value.split('.');
 
@@ -92,13 +99,6 @@ function formatRangeText(startDate: string, endDate: string) {
 function createYearRange(baseYear: number) {
   const rangeStart = baseYear - 4;
   return Array.from({ length: 9 }, (_, index) => rangeStart + index);
-}
-
-function toCalendarDate(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }
 
 export default function DateRangePickerModal({
@@ -317,56 +317,30 @@ export default function DateRangePickerModal({
           </Pressable>
         </View>
 
-        <View style={styles.infoCardWrapper}>
-          <View style={styles.selectionInfoCard}>
-            <View>
-              <Text style={styles.infoLabel}>Seçilen Aralık</Text>
-              <Text
-                style={[
-                  styles.dateRangeDisplay,
-                  !(startDate && endDate) && styles.dateRangePlaceholder,
-                ]}
-              >
-                {startDate
-                  ? endDate
-                    ? formatRangeText(startDate, endDate)
-                    : `${formatCalendarDate(startDate)} - Bitiş seçin`
-                  : 'Lütfen iki tarih seçiniz'}
-              </Text>
-            </View>
-
-            <View style={styles.iconHighlight}>
-              <Ionicons name="calendar-outline" size={24} color="#1976D2" />
-            </View>
-          </View>
-        </View>
-
         <View style={styles.inputRow}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Başlangıç</Text>
-            <TextInput
-              value={startInput}
-              onChangeText={(value) => handleInputChange('start', value)}
-              keyboardType="number-pad"
-              placeholder="GG.AA.YYYY"
-              placeholderTextColor="#8FA7C2"
-              style={styles.dateInput}
-              maxLength={10}
-            />
+          <TextInput
+            value={startInput}
+            onChangeText={(value) => handleInputChange('start', value)}
+            keyboardType="number-pad"
+            placeholder="Başlangıç"
+            placeholderTextColor="#8FA7C2"
+            style={styles.dateInput}
+            maxLength={10}
+          />
+
+          <View style={styles.arrowWrapper}>
+            <Ionicons name="arrow-forward" size={18} color="#6B7A90" />
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Bitiş</Text>
-            <TextInput
-              value={endInput}
-              onChangeText={(value) => handleInputChange('end', value)}
-              keyboardType="number-pad"
-              placeholder="GG.AA.YYYY"
-              placeholderTextColor="#8FA7C2"
-              style={styles.dateInput}
-              maxLength={10}
-            />
-          </View>
+          <TextInput
+            value={endInput}
+            onChangeText={(value) => handleInputChange('end', value)}
+            keyboardType="number-pad"
+            placeholder="Bitiş"
+            placeholderTextColor="#8FA7C2"
+            style={styles.dateInput}
+            maxLength={10}
+          />
         </View>
 
         <View style={styles.quickRangeRow}>
@@ -497,64 +471,16 @@ const styles = StyleSheet.create({
   iconButton: {
     padding: 5,
   },
-  infoCardWrapper: {
-    padding: 20,
-  },
-  selectionInfoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  infoLabel: {
-    fontSize: 12,
-    color: '#888',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  dateRangeDisplay: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1976D2',
-  },
-  dateRangePlaceholder: {
-    color: '#AAA',
-    fontWeight: '500',
-  },
-  iconHighlight: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#E3F2FD',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   inputRow: {
     flexDirection: 'row',
-    gap: 12,
+    alignItems: 'center',
+    gap: 10,
     paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  inputGroup: {
-    flex: 1,
-  },
-  inputLabel: {
-    fontSize: 12,
-    color: '#6B7A90',
-    marginBottom: 6,
-    fontWeight: '600',
+    marginTop: 20,
+    marginBottom: 14,
   },
   dateInput: {
+    flex: 1,
     height: 48,
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
@@ -565,12 +491,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
+  arrowWrapper: {
+    width: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   quickRangeRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
     paddingHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   quickRangeChip: {
     paddingHorizontal: 14,
@@ -591,7 +522,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#EBEEF2',
   },
@@ -599,7 +530,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   headerControl: {
     width: 40,
@@ -613,9 +544,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexShrink: 1,
   },
   titleButton: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
     backgroundColor: '#F1F6FB',
@@ -623,7 +555,7 @@ const styles = StyleSheet.create({
   titleButtonText: {
     color: '#1976D2',
     fontWeight: '700',
-    fontSize: 15,
+    fontSize: 14,
   },
   selectionGrid: {
     flexDirection: 'row',

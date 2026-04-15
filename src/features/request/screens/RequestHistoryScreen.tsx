@@ -86,7 +86,7 @@ export default function RequestHistoryScreen() {
               onDetailsPress={(item) =>
                 router.push({
                   pathname: '/request/[id]',
-                  params: { id: item.id },
+                  params: { id: item.id, source: 'history' },
                 })
               }
               selectedIds={[]}

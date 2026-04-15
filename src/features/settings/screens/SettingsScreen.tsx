@@ -34,6 +34,8 @@ const AnimatedItem = ({
 export default function SettingsScreen() {
   const router = useRouter();
   const { session, clearSession } = useAuthStore();
+  const displayName = session?.user.fullName?.trim() || 'Demo Kullanıcı';
+  const organizationName = session?.user.company?.trim() || 'Yaşar Bilgi';
   const [isLoading, setIsLoading] = useState(false);
   const [isDataReady, setIsDataReady] = useState(false);
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
@@ -68,8 +70,8 @@ export default function SettingsScreen() {
             <AnimatedItem delay={100}>
               <Text style={styles.sectionTitle}>Profil</Text>
               <View style={styles.profileCard}>
-                <Text style={styles.userName}>{session?.user.fullName ?? 'Demo Kullanıcı'}</Text>
-                <Text style={styles.companyName}>{session?.user.company ?? 'Yaşar Bilgi'}</Text>
+                <Text style={styles.userName}>{displayName}</Text>
+                <Text style={styles.companyName}>{organizationName}</Text>
               </View>
             </AnimatedItem>
 
