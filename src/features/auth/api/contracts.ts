@@ -14,6 +14,11 @@ export interface PasswordResetRequestDto {
   email: string;
 }
 
+export interface SetPasswordRequestDto {
+  email: string;
+  newPassword: string;
+}
+
 export interface AuthUserDto {
   id: string;
   fullName: string;
@@ -52,5 +57,17 @@ export interface PasswordResetResponseDto {
 }
 
 export interface RegisterResponseDto {
-  message: string;
+  code: number;
+  message: string | null;
+  data: unknown;
+  dataList: unknown;
+  title: string | null;
+}
+
+export interface SetPasswordResponseDto {
+  code: number;
+  message: string | null;
+  data: unknown;
+  dataList: unknown;
+  title: string | null;
 }

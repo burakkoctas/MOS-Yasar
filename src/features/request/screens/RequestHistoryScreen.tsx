@@ -6,7 +6,6 @@ import AppLoader from '@/src/shared/components/ui/AppLoader';
 import EntranceTransition from '@/src/shared/components/ui/EntranceTransition';
 import FilteredList from '../components/FilteredList';
 import RequestFilterBar from '../components/RequestFilterBar';
-import { useRequestFilter } from '../hooks/useRequestFilter';
 import { parseDateRangeText, requestService } from '../services/requestService';
 import { CategoryGroup } from '../types';
 
@@ -33,28 +32,43 @@ export default function RequestHistoryScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [activeCategoryTitle, setActiveCategoryTitle] = useState<string | null>(null);
   const [dateRangeText, setDateRangeText] = useState(getDefaultDateRange());
-  const { setSearchKeyword, processedData } = useRequestFilter(allHistory);
+  const [searchInputValue, setSearchInputValue] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
 
-  const fetchHistory = useCallback(async (rangeText: string) => {
+  const fetchHistory = useCallback(async (rangeText: string, nextSearchValue = '') => {
+    console.log('[request-history] fetch start', {
+      rangeText,
+      searchValue: nextSearchValue,
+    });
     setIsContentReady(false);
     setIsLoading(true);
     try {
       const data = await requestService.getRequestHistory({
         range: parseDateRangeText(rangeText),
+        searchValue: nextSearchValue,
+      });
+      console.log('[request-history] fetch success', {
+        categoryCount: data.length,
+        itemCount: data.reduce((total, group) => total + group.data.length, 0),
       });
       setAllHistory(data);
       setIsContentReady(true);
+      console.log('[request-history] content ready');
     } finally {
+      console.log('[request-history] fetch end');
       setIsLoading(false);
     }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      setSearchKeyword('');
+      console.log('[request-history] screen focused', {
+        dateRangeText,
+        searchKeyword,
+      });
       setActiveCategoryTitle(null);
-      fetchHistory(dateRangeText);
-    }, [dateRangeText, fetchHistory, setSearchKeyword]),
+      fetchHistory(dateRangeText, searchKeyword);
+    }, [dateRangeText, fetchHistory, searchKeyword]),
   );
 
   return (
@@ -63,9 +77,18 @@ export default function RequestHistoryScreen() {
         <>
           <EntranceTransition delay={100}>
             <RequestFilterBar
-              onSearch={setSearchKeyword}
+              onSearch={setSearchInputValue}
+              onSubmitSearch={() => {
+                console.log('[request-history] submit search', {
+                  searchInputValue,
+                });
+                setActiveCategoryTitle(null);
+                setSearchKeyword(searchInputValue);
+                fetchHistory(dateRangeText, searchInputValue);
+              }}
               onDatePress={() => setModalVisible(true)}
               placeholder="Arama kriteri giriniz"
+              value={searchInputValue}
             />
           </EntranceTransition>
 
@@ -78,7 +101,7 @@ export default function RequestHistoryScreen() {
 
           <EntranceTransition delay={320} style={styles.listWrapper}>
             <FilteredList
-              data={processedData}
+              data={allHistory}
               openCategory={activeCategoryTitle}
               onToggle={(categoryTitle) =>
                 setActiveCategoryTitle((prev) => (prev === categoryTitle ? null : categoryTitle))
@@ -101,9 +124,13 @@ export default function RequestHistoryScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onSave={(rangeText) => {
+          console.log('[request-history] date range saved', {
+            rangeText,
+            searchKeyword,
+          });
           setDateRangeText(rangeText);
           setModalVisible(false);
-          fetchHistory(rangeText);
+          fetchHistory(rangeText, searchKeyword);
         }}
       />
 

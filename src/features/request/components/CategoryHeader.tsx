@@ -10,6 +10,8 @@ interface CategoryHeaderProps {
   isAllSelected: boolean;
   onSelectAll: (value: boolean) => void;
   showCheckbox?: boolean;
+  compact?: boolean;
+  keepCheckboxVisible?: boolean;
 }
 
 export default function CategoryHeader({
@@ -20,25 +22,35 @@ export default function CategoryHeader({
   isAllSelected,
   onSelectAll,
   showCheckbox = true,
+  compact = false,
+  keepCheckboxVisible = false,
 }: CategoryHeaderProps) {
   return (
-    <View style={[styles.header, expanded ? styles.headerActive : styles.headerInactive]}>
+    <View
+      style={[
+        styles.header,
+        compact && styles.headerCompact,
+        expanded ? styles.headerActive : styles.headerInactive,
+      ]}
+    >
       <Pressable
         android_ripple={{ color: 'transparent' }}
         focusable={false}
-        style={styles.clickableArea}
+        style={[styles.clickableArea, compact && styles.clickableAreaCompact]}
         onPress={onToggle}
       >
-        <View style={styles.countCircle}>
-          <Text style={styles.countText}>{count}</Text>
+        <View style={[styles.countCircle, compact && styles.countCircleCompact]}>
+          <Text style={[styles.countText, compact && styles.countTextCompact]}>{count}</Text>
         </View>
 
-        <Text style={[styles.title, expanded && styles.titleActive]}>{title}</Text>
+        <Text style={[styles.title, compact && styles.titleCompact, expanded && styles.titleActive]}>
+          {title}
+        </Text>
       </Pressable>
 
-      {showCheckbox && expanded && (
+      {showCheckbox && (expanded || keepCheckboxVisible) && (
         <Pressable
-          style={styles.rightContent}
+          style={[styles.rightContent, compact && styles.rightContentCompact]}
           onPress={(event) => {
             event.stopPropagation();
             onSelectAll(!isAllSelected);
@@ -71,6 +83,10 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginHorizontal: 10,
   },
+  headerCompact: {
+    borderRadius: 22,
+    marginHorizontal: 0,
+  },
   headerInactive: { backgroundColor: '#efefef', borderWidth: 0 },
   headerActive: {
     backgroundColor: '#E3F2FD',
@@ -84,6 +100,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingLeft: 15,
   },
+  clickableAreaCompact: {
+    paddingVertical: 9,
+    paddingLeft: 12,
+  },
   countCircle: {
     width: 36,
     height: 36,
@@ -93,14 +113,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
+  countCircleCompact: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    marginRight: 10,
+  },
   countText: { fontSize: 18, fontWeight: 'bold', color: '#1976D2' },
+  countTextCompact: { fontSize: 14 },
   title: { fontSize: 16, fontWeight: '600', color: '#000000', marginLeft: 10 },
+  titleCompact: { fontSize: 14, marginLeft: 4 },
   titleActive: { color: '#1976D2' },
   rightContent: {
     paddingVertical: 10,
     paddingRight: 15,
     paddingLeft: 10,
     justifyContent: 'center',
+  },
+  rightContentCompact: {
+    paddingVertical: 8,
+    paddingRight: 12,
+    paddingLeft: 8,
   },
   checkbox: { width: 20, height: 20, borderRadius: 4, marginRight: 5 },
 });

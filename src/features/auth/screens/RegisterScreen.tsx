@@ -4,9 +4,10 @@ import CustomFabIcon from '@/src/shared/components/ui/CustomFabIcon';
 import YasarBilgiLogo from '@/src/shared/components/ui/YasarBilgiLogo';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,6 +15,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 
@@ -23,19 +25,35 @@ export default function RegisterScreen() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSubscription = Keyboard.addListener(showEvent, () => {
+      setIsKeyboardVisible(true);
+    });
+    const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const handleRegister = async () => {
     setIsSubmitting(true);
     try {
-      await authService.register({
+      const message = await authService.register({
         firstName,
         lastName,
         email,
       });
-      Alert.alert(
-        'Bilgi',
-        'Kayıt isteği hazırlandı. Servis bağlantısı geldiğinde gerçek akış eklenecek.',
-      );
+
+      Alert.alert('Bilgi', message || 'Geçici şifre e-posta ile gönderildi.');
       router.back();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Kayıt tamamlanamadı.';
@@ -46,87 +64,101 @@ export default function RegisterScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerTitle: '',
-          headerTransparent: false,
-          headerShadowVisible: false,
-          headerStyle: { backgroundColor: '#FAFAFA' },
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{ marginLeft: 5, padding: 5 }}
-              activeOpacity={0.6}
-            >
-              <Ionicons name="arrow-back" size={28} color="#1976D2" />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
+      >
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            headerTitle: '',
+            headerTransparent: false,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: '#FAFAFA' },
+            headerLeft: () => (
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={styles.backButton}
+                activeOpacity={0.6}
+              >
+                <Ionicons name="arrow-back" size={28} color="#1976D2" />
+              </TouchableOpacity>
+            ),
+          }}
+        />
+
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={[styles.logoContainer, isKeyboardVisible && styles.logoContainerKeyboardVisible]}>
+            {!isKeyboardVisible && (
+              <View style={styles.iconWrapper}>
+                <CustomFabIcon size={55} color="#1976D2" />
+              </View>
+            )}
+            <Text style={[styles.appName, isKeyboardVisible && styles.appNameKeyboardVisible]}>
+              Dijital.Onay
+            </Text>
+          </View>
+
+          <View style={styles.formContainer}>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.input}
+                placeholder="Ad"
+                placeholderTextColor="#A0A0A0"
+                value={firstName}
+                onChangeText={setFirstName}
+              />
+            </View>
+
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.input}
+                placeholder="Soyad"
+                placeholderTextColor="#A0A0A0"
+                value={lastName}
+                onChangeText={setLastName}
+              />
+            </View>
+
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.input}
+                placeholder="E-posta"
+                placeholderTextColor="#A0A0A0"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <TouchableOpacity style={styles.registerButton} onPress={handleRegister} activeOpacity={0.8}>
+              <Text style={styles.registerButtonText}>Üye Ol</Text>
             </TouchableOpacity>
-          ),
-        }}
-      />
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.logoContainer}>
-          <View style={styles.iconWrapper}>
-            <CustomFabIcon size={55} color="#1976D2" />
           </View>
-          <Text style={styles.appName}>Dijital.Onay</Text>
-        </View>
+        </ScrollView>
 
-        <View style={styles.formContainer}>
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.input}
-              placeholder="Ad"
-              placeholderTextColor="#A0A0A0"
-              value={firstName}
-              onChangeText={setFirstName}
-            />
+        {!isKeyboardVisible && (
+          <View style={styles.footer}>
+            <YasarBilgiLogo width={120} height={19} />
           </View>
+        )}
 
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.input}
-              placeholder="Soyad"
-              placeholderTextColor="#A0A0A0"
-              value={lastName}
-              onChangeText={setLastName}
-            />
-          </View>
-
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.input}
-              placeholder="E-posta"
-              placeholderTextColor="#A0A0A0"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-
-          <TouchableOpacity style={styles.registerButton} onPress={handleRegister} activeOpacity={0.8}>
-            <Text style={styles.registerButtonText}>Üye Ol</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <YasarBilgiLogo width={120} height={19} />
-      </View>
-
-      <AppLoader visible={isSubmitting} />
-    </KeyboardAvoidingView>
+        <AppLoader visible={isSubmitting} />
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
+  backButton: { marginLeft: 5, padding: 5 },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -135,6 +167,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   logoContainer: { alignItems: 'center', marginBottom: 40 },
+  logoContainerKeyboardVisible: { marginBottom: 26 },
   iconWrapper: {
     width: 100,
     height: 100,
@@ -151,6 +184,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1976D2',
     letterSpacing: 0.5,
+  },
+  appNameKeyboardVisible: {
+    fontSize: 32,
   },
   formContainer: { width: '100%' },
   inputWrapper: { marginBottom: 20 },

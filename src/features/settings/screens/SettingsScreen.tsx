@@ -42,15 +42,8 @@ export default function SettingsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setIsDataReady(false);
-      setIsLoading(true);
-
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-        setIsDataReady(true);
-      }, 800);
-
-      return () => clearTimeout(timer);
+      setIsLoading(false);
+      setIsDataReady(true);
     }, []),
   );
 

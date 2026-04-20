@@ -7,8 +7,6 @@ import {
 import { CreateDelegatePayload, Delegate } from '@/src/features/delegate/types';
 import { createApiClient } from '@/src/shared/api/apiClient';
 
-const DELAY = 250;
-
 const activeDelegates: Delegate[] = [
   {
     id: '1',
@@ -44,7 +42,7 @@ const pastDelegates: Delegate[] = [
 ];
 
 function wait() {
-  return new Promise((resolve) => setTimeout(resolve, DELAY));
+  return Promise.resolve();
 }
 
 function formatDate(date: Date) {

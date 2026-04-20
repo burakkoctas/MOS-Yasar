@@ -1,15 +1,149 @@
 import ActionDrawer from '@/src/shared/components/ui/ActionDrawer';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import ConfirmModal from '@/src/shared/components/ui/ConfirmModal';
+import { Ionicons } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as IntentLauncher from 'expo-intent-launcher';
+import * as Sharing from 'expo-sharing';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RequestDetailHeader from '../components/detail/RequestDetailHeader';
 import RequestDetailSection from '../components/detail/RequestDetailSection';
 import RequestInfoRow from '../components/detail/RequestInfoRow';
 import { requestService } from '../services/requestService';
-import { RequestItem } from '../types';
+import { RequestAttachment, RequestItem, RequestOperation } from '../types';
+
+function getAttachmentIconName(fileName: string): keyof typeof Ionicons.glyphMap {
+  const extension = fileName.split('.').pop()?.toLowerCase();
+
+  switch (extension) {
+    case 'pdf':
+      return 'document-text-outline';
+    case 'xls':
+    case 'xlsx':
+    case 'csv':
+      return 'grid-outline';
+    case 'doc':
+    case 'docx':
+      return 'document-outline';
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'gif':
+    case 'webp':
+      return 'image-outline';
+    case 'zip':
+    case 'rar':
+    case '7z':
+      return 'archive-outline';
+    default:
+      return 'attach-outline';
+  }
+}
+
+function getAttachmentMimeType(fileName: string) {
+  const lowerName = fileName.toLowerCase();
+
+  if (lowerName.endsWith('.pdf')) {
+    return 'application/pdf';
+  }
+
+  if (lowerName.endsWith('.png')) {
+    return 'image/png';
+  }
+
+  if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) {
+    return 'image/jpeg';
+  }
+
+  if (lowerName.endsWith('.doc')) {
+    return 'application/msword';
+  }
+
+  if (lowerName.endsWith('.docx')) {
+    return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  }
+
+  if (lowerName.endsWith('.xls')) {
+    return 'application/vnd.ms-excel';
+  }
+
+  if (lowerName.endsWith('.xlsx')) {
+    return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  }
+
+  return 'application/octet-stream';
+}
+
+function supportsInlinePreview(fileName: string) {
+  const mimeType = getAttachmentMimeType(fileName);
+  return mimeType === 'application/pdf' || mimeType.startsWith('image/');
+}
+
+function createPreviewHtml(fileName: string, base64Content: string) {
+  const mimeType = getAttachmentMimeType(fileName);
+  const dataUri = `data:${mimeType};base64,${base64Content}`;
+
+  if (mimeType.startsWith('image/')) {
+    return `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: #111827;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="${dataUri}" alt="${fileName}" />
+  </body>
+</html>`;
+  }
+
+  return `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: #f3f4f6;
+      }
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <iframe src="${dataUri}"></iframe>
+  </body>
+</html>`;
+}
 
 export default function RequestDetailScreen() {
   const router = useRouter();
@@ -17,6 +151,7 @@ export default function RequestDetailScreen() {
   const { id, source } = useLocalSearchParams<{ id: string; source?: string }>();
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeAttachmentId, setActiveAttachmentId] = useState<string | null>(null);
   const [request, setRequest] = useState<RequestItem | null>(null);
   const isHistoryView = source === 'history';
 
@@ -25,34 +160,153 @@ export default function RequestDetailScreen() {
       return;
     }
 
+    console.log('[request-detail] load start', {
+      id,
+      source: source === 'history' ? 'history' : 'request',
+    });
     setIsLoading(true);
     try {
-      const nextRequest = await requestService.getRequestById(id);
+      const nextRequest = await requestService.getRequestById(
+        id,
+        source === 'history' ? 'history' : 'request',
+      );
+      console.log('[request-detail] load success', {
+        found: Boolean(nextRequest),
+        attachmentCount: nextRequest?.attachments?.length ?? 0,
+      });
       setRequest(nextRequest);
     } finally {
+      console.log('[request-detail] load end');
       setIsLoading(false);
     }
-  }, [id]);
+  }, [id, source]);
 
   useFocusEffect(
     useCallback(() => {
+      console.log('[request-detail] screen focused');
       loadRequest();
     }, [loadRequest]),
   );
 
-  const handleActionComplete = async (action: 'APPROVE' | 'REJECT') => {
+  const handleActionComplete = async (operation: RequestOperation) => {
     if (!request) {
       return;
     }
 
+    console.log('[request-detail] action start', {
+      requestId: request.id,
+      operationName: operation.operationName,
+      statusCode: operation.statusCode,
+    });
     setIsLoading(true);
     try {
-      await requestService.processAction([request.id], action);
+      await requestService.processAction([request.id], operation);
       router.back();
     } finally {
+      console.log('[request-detail] action end');
       setIsLoading(false);
     }
   };
+
+  const handleAttachmentPress = useCallback(
+    async (attachment: RequestAttachment) => {
+      try {
+        console.log('[request-detail] attachment open start', {
+          attachmentId: attachment.id,
+          attachmentName: attachment.name,
+        });
+        setActiveAttachmentId(attachment.id);
+
+        const attachmentContent = await requestService.getAttachmentContent(attachment.id);
+
+        if (!attachmentContent?.content) {
+          Alert.alert('Ek Açılamadı', 'Ek içeriği alınamadı.');
+          return;
+        }
+
+        const cacheDirectory = FileSystem.cacheDirectory;
+
+        if (!cacheDirectory) {
+          Alert.alert('Ek Açılamadı', 'Cihaz geçici dosya alanına erişemedi.');
+          return;
+        }
+
+        const safeFileName = attachmentContent.name.replace(/[<>:"/\\|?*]+/g, '_');
+        const fileUri = `${cacheDirectory}${safeFileName}`;
+
+        await FileSystem.writeAsStringAsync(fileUri, attachmentContent.content, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+
+        if (Platform.OS === 'android') {
+          const contentUri = await FileSystem.getContentUriAsync(fileUri);
+
+          await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+            data: contentUri,
+            flags: 1,
+            type: getAttachmentMimeType(attachmentContent.name),
+          });
+          console.log('[request-detail] attachment open success', {
+            attachmentId: attachment.id,
+            platform: Platform.OS,
+            mode: 'external-viewer',
+          });
+          return;
+        }
+
+        if (supportsInlinePreview(attachmentContent.name)) {
+          const previewHtml = createPreviewHtml(attachmentContent.name, attachmentContent.content);
+          const previewFileUri = `${cacheDirectory}${safeFileName}.html`;
+
+          await FileSystem.writeAsStringAsync(previewFileUri, previewHtml);
+
+          router.push({
+            pathname: '/request/attachment-preview',
+            params: {
+              title: attachmentContent.name,
+              uri: previewFileUri,
+            },
+          });
+          console.log('[request-detail] attachment open success', {
+            attachmentId: attachment.id,
+            platform: Platform.OS,
+            mode: 'inline-preview',
+          });
+          return;
+        }
+
+        const canShare = await Sharing.isAvailableAsync();
+
+        if (!canShare) {
+          Alert.alert('Ek Açılamadı', 'Bu dosya türü uygulama içinde önizlenemedi.');
+          return;
+        }
+
+        await Sharing.shareAsync(fileUri, {
+          mimeType: getAttachmentMimeType(attachmentContent.name),
+          dialogTitle: attachmentContent.name,
+        });
+        console.log('[request-detail] attachment open success', {
+          attachmentId: attachment.id,
+          platform: Platform.OS,
+          mode: 'sharing-fallback',
+        });
+      } catch (error) {
+        console.log('[request-detail] attachment open error', {
+          attachmentId: attachment.id,
+          error,
+        });
+        const message = error instanceof Error ? error.message : 'Ek açılırken hata oluştu.';
+        Alert.alert('Ek Açılamadı', message);
+      } finally {
+        console.log('[request-detail] attachment open end', {
+          attachmentId: attachment.id,
+        });
+        setActiveAttachmentId(null);
+      }
+    },
+    [router],
+  );
 
   if (!request && !isLoading) {
     return (
@@ -80,8 +334,25 @@ export default function RequestDetailScreen() {
               { paddingBottom: insets.bottom + (isHistoryView ? 24 : 130) },
             ]}
           >
-            <View style={styles.statusBar}>
-              <Text style={styles.statusText}>{request.statu}</Text>
+            <View
+              style={[
+                styles.statusBar,
+                request.statusBackgroundColor
+                  ? {
+                      backgroundColor: request.statusBackgroundColor,
+                      borderColor: request.statusBackgroundColor,
+                    }
+                  : null,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.statusText,
+                  request.statusTextColor ? { color: request.statusTextColor } : null,
+                ]}
+              >
+                {request.statusLabel || request.statu}
+              </Text>
             </View>
 
             <View style={styles.headerRow}>
@@ -101,19 +372,71 @@ export default function RequestDetailScreen() {
               <RequestInfoRow label="Bitiş Tarihi" value={request.bitis} />
               <RequestInfoRow label="Modül" value={request.modul ?? 'SAP Workflow'} />
               <RequestInfoRow label="Kategori" value={request.kategori ?? '-'} />
+              {request.approver ? <RequestInfoRow label="Onaylayan" value={request.approver} /> : null}
+              {request.responseDate ? (
+                <RequestInfoRow label="Yanıt Tarihi" value={request.responseDate} />
+              ) : null}
             </RequestDetailSection>
 
-            <RequestDetailSection title="İstek Açıklaması">
-              <Text style={styles.descriptionText}>
-                {request.aciklama ?? 'Açıklama bulunmuyor.'}
-              </Text>
-            </RequestDetailSection>
+            {request.detailSections?.length ? (
+              request.detailSections.map((section, sectionIndex) => (
+                <RequestDetailSection key={`${section.title}-${sectionIndex}`} title={section.title}>
+                  {section.lines.map((line, lineIndex) =>
+                    line.kind === 'pair' && line.label ? (
+                      <RequestInfoRow
+                        key={`${section.title}-${line.label}-${lineIndex}`}
+                        label={line.label}
+                        value={line.value}
+                      />
+                    ) : (
+                      <Text key={`${section.title}-text-${lineIndex}`} style={styles.descriptionText}>
+                        {line.value}
+                      </Text>
+                    ),
+                  )}
+                </RequestDetailSection>
+              ))
+            ) : (
+              <RequestDetailSection title="İstek Açıklaması">
+                <Text style={styles.descriptionText}>
+                  {request.aciklama ?? 'Açıklama bulunmuyor.'}
+                </Text>
+              </RequestDetailSection>
+            )}
 
             <RequestDetailSection title="Kişiler">
               <RequestInfoRow label="İstek Sahibi" value={request.gonderen} />
+              {request.requesterUsername ? (
+                <RequestInfoRow label="Kullanıcı Adı" value={request.requesterUsername} />
+              ) : null}
               <RequestInfoRow label="Şirket" value={request.sirket} />
               <RequestInfoRow label="Onay Durumu" value={request.onayDurumu} />
             </RequestDetailSection>
+
+            {request.attachments?.length ? (
+              <RequestDetailSection title="Ekler">
+                {request.attachments.map((attachment) => (
+                  <Pressable
+                    key={attachment.id}
+                    style={styles.attachmentButton}
+                    onPress={() => handleAttachmentPress(attachment)}
+                  >
+                    <View style={styles.attachmentContent}>
+                      <Ionicons
+                        name={getAttachmentIconName(attachment.name)}
+                        size={18}
+                        color="#1976D2"
+                        style={styles.attachmentIcon}
+                      />
+                      <Text style={styles.attachmentButtonText}>{attachment.name}</Text>
+                    </View>
+                    {activeAttachmentId === attachment.id ? (
+                      <Text style={styles.attachmentLoadingText}>Hazırlanıyor...</Text>
+                    ) : null}
+                  </Pressable>
+                ))}
+              </RequestDetailSection>
+            ) : null}
           </ScrollView>
 
           {!isHistoryView && (
@@ -129,7 +452,11 @@ export default function RequestDetailScreen() {
                 }}
               />
 
-              <ActionDrawer selectedIds={[request.id]} onActionComplete={handleActionComplete} />
+              <ActionDrawer
+                selectedIds={[request.id]}
+                operations={request.operations}
+                onActionComplete={handleActionComplete}
+              />
             </>
           )}
         </>
@@ -171,5 +498,34 @@ const styles = StyleSheet.create({
   nameText: { fontSize: 22, fontWeight: 'bold', color: '#333' },
   dateText: { fontSize: 14, color: '#666' },
   belgeNoText: { fontSize: 14, color: '#888', marginBottom: 20 },
-  descriptionText: { fontSize: 14, color: '#444', lineHeight: 20 },
+  descriptionText: { fontSize: 14, color: '#444', lineHeight: 20, marginBottom: 8 },
+  attachmentButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#D8E7F5',
+  },
+  attachmentContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  attachmentIcon: {
+    marginRight: 10,
+  },
+  attachmentButtonText: {
+    color: '#1976D2',
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
+    textDecorationLine: 'underline',
+  },
+  attachmentLoadingText: {
+    marginTop: 8,
+    color: '#7B97B5',
+    fontSize: 12,
+    fontWeight: '500',
+  },
 });

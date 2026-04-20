@@ -11,6 +11,7 @@ interface RequestItemProps {
   isSelected: boolean;
   onSelect: (id: string, isSelected: boolean) => void;
   showCheckbox?: boolean;
+  compact?: boolean;
 }
 
 const RequestItem: React.FC<RequestItemProps> = ({
@@ -19,33 +20,33 @@ const RequestItem: React.FC<RequestItemProps> = ({
   isSelected,
   onSelect,
   showCheckbox = true,
+  compact = false,
 }) => {
-  if (!requestData) return null;
+  if (!requestData) {
+    return null;
+  }
 
   return (
     <Pressable
-      style={styles.cardContainer}
+      style={[styles.cardContainer, compact && styles.cardContainerCompact]}
       onPress={() => onItemPress(requestData)}
     >
       <RequestCardHeader
-        statusLabel={requestData.onayDurumu || 'Bekliyor'}
+        statusLabel={requestData.statusLabel || requestData.statu || '-'}
+        statusBackgroundColor={requestData.statusBackgroundColor}
+        statusTextColor={requestData.statusTextColor}
         isSelected={isSelected}
-        onSelect={(val) => onSelect(requestData.id, val)}
+        onSelect={(value) => onSelect(requestData.id, value)}
         showCheckbox={showCheckbox}
       />
 
       <RequestCardInfo
         senderName={requestData.gonderen || 'İsimsiz'}
         requestDate={requestData.baslangic || '-'}
+        compact={compact}
       />
 
-      <RequestCardDetails
-        requestId={requestData.istekNo || '0'}
-        companyTitle={requestData.sirket || '-'}
-        currentStatus={requestData.statu || '-'}
-        startDate={requestData.baslangic || '-'}
-        endDate={requestData.bitis || '-'}
-      />
+      <RequestCardDetails lines={requestData.descriptionList ?? []} />
     </Pressable>
   );
 };
@@ -60,12 +61,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e0e0e0',
     overflow: 'hidden',
-    // Accordion animasyonu sirasinda siyah golge izleri olusmamasi icin
-    // kart ayiricisini shadow yerine border ile veriyoruz.
     shadowColor: '#DCE6F2',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 2,
+  },
+  cardContainerCompact: {
+    marginHorizontal: 0,
+    marginBottom: 6,
+    paddingVertical: 6,
+    borderRadius: 10,
   },
 });
 

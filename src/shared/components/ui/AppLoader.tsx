@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import LoadingArrow from './LoadingArrow';
 
@@ -7,6 +7,10 @@ interface AppLoaderProps {
 }
 
 export default function AppLoader({ visible }: AppLoaderProps) {
+  useEffect(() => {
+    console.log('[loader] visibility changed', { visible });
+  }, [visible]);
+
   return (
     <Modal
       transparent={true}
@@ -29,9 +33,11 @@ export default function AppLoader({ visible }: AppLoaderProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 9999,
+    elevation: 9999,
   },
   loaderCircle: {
     width: 70,
@@ -42,10 +48,11 @@ const styles = StyleSheet.create({
     borderColor: '#1976D2',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
+    zIndex: 10000,
+    elevation: 10000,
   },
 });

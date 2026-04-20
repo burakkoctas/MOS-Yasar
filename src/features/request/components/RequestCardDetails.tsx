@@ -2,22 +2,16 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 interface DetailsProps {
-  requestId: string;
-  companyTitle: string;
-  currentStatus: string;
-  startDate: string;
-  endDate: string;
+  lines: string[];
 }
 
-const RequestCardDetails: React.FC<DetailsProps> = ({ 
-  requestId, companyTitle, currentStatus, startDate, endDate 
-}) => (
+const RequestCardDetails: React.FC<DetailsProps> = ({ lines }) => (
   <View style={styles.detailsContainer}>
-    <Text style={styles.detailItem}>İstek No: {requestId}</Text>
-    <Text style={styles.detailItem}>Şirket: {companyTitle}</Text>
-    <Text style={styles.detailItem}>Statü: {currentStatus}</Text>
-    <Text style={styles.detailItem}>Açılış Tarihi: {startDate}</Text>
-    <Text style={styles.detailItem}>Bitiş Tarihi: {endDate}</Text>
+    {lines.slice(0, 5).map((line, index) => (
+      <Text key={`${line}-${index}`} style={styles.detailItem}>
+        {line}
+      </Text>
+    ))}
   </View>
 );
 

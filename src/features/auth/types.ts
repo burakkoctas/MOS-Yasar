@@ -14,6 +14,11 @@ export interface PasswordResetPayload {
   email: string;
 }
 
+export interface SetPasswordPayload {
+  email: string;
+  newPassword: string;
+}
+
 export interface AuthUser {
   id: string;
   fullName: string;

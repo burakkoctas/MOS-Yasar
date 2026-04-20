@@ -5,6 +5,7 @@ import CustomCalendarIcon from '../../../shared/components/icons/CustomCalendarI
 
 interface RequestFilterBarProps {
   onSearch: (text: string) => void;
+  onSubmitSearch?: () => void;
   onDatePress: () => void;
   placeholder?: string;
   value?: string;
@@ -12,6 +13,7 @@ interface RequestFilterBarProps {
 
 export default function RequestFilterBar({
   onSearch,
+  onSubmitSearch,
   onDatePress,
   placeholder = 'Arama kriteri giriniz.',
   value,
@@ -27,8 +29,10 @@ export default function RequestFilterBar({
           placeholder={placeholder}
           placeholderTextColor="#1976D2"
           onChangeText={onSearch}
+          onSubmitEditing={onSubmitSearch}
           value={value}
           selectionColor="#1976D2"
+          returnKeyType="search"
         />
       </View>
 

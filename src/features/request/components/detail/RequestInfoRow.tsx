@@ -7,10 +7,15 @@ interface RequestInfoRowProps {
 }
 
 export default function RequestInfoRow({ label, value }: RequestInfoRowProps) {
+  const isEmailValue = value.includes('@');
+
   return (
     <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}:</Text>
-      <Text style={styles.infoValue}>{value}</Text>
+      <Text style={styles.infoLabel}>
+        <Text style={styles.infoLabelStrong}>{label}</Text>
+        <Text style={styles.infoLabelStrong}>:</Text>
+      </Text>
+      <Text style={[styles.infoValue, isEmailValue && styles.infoValueEmail]}>{value}</Text>
     </View>
   );
 }
@@ -18,7 +23,7 @@ export default function RequestInfoRow({ label, value }: RequestInfoRowProps) {
 const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     paddingVertical: 6,
     borderBottomWidth: 0.5,
     borderBottomColor: '#F5F5F5',
@@ -26,13 +31,22 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 14,
     color: '#666',
-    flex: 1,
+    flexShrink: 0,
+    marginRight: 4,
+  },
+  infoLabelStrong: {
+    fontWeight: '700',
+    color: '#555',
   },
   infoValue: {
     fontSize: 14,
     color: '#333',
-    fontWeight: '500',
     flex: 1,
+    minWidth: 0,
     textAlign: 'right',
+  },
+  infoValueEmail: {
+    flexShrink: 1,
+    lineHeight: 20,
   },
 });

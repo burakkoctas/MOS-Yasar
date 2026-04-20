@@ -1,16 +1,16 @@
-import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 import FilteredList from '@/src/features/request/components/FilteredList';
 import RadioDateModal from '@/src/features/request/components/RadioDateModal';
 import ActionDrawer from '@/src/shared/components/ui/ActionDrawer';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import EntranceTransition from '@/src/shared/components/ui/EntranceTransition';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import RequestFilterBar from '../components/RequestFilterBar';
 import { useRequestFilter } from '../hooks/useRequestFilter';
 import { requestService } from '../services/requestService';
-import { CategoryGroup } from '../types';
+import { CategoryGroup, RequestOperation } from '../types';
 
 export default function RequestListScreen() {
   const router = useRouter();
@@ -23,6 +23,10 @@ export default function RequestListScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const { searchKeyword, setSearchKeyword, processedData } = useRequestFilter(allRequests);
   const canBulkApprove = session?.user.roles.includes('bulk_approve') ?? false;
+  const canSelectRequest = useCallback(
+    (item: { multipleApprove?: boolean }) => canBulkApprove || Boolean(item.multipleApprove),
+    [canBulkApprove],
+  );
 
   const availableDates = useMemo(() => {
     const dates = new Set<string>();
@@ -35,6 +39,25 @@ export default function RequestListScreen() {
     });
     return Array.from(dates).sort();
   }, [allRequests]);
+
+  const categoryRequestIds = useMemo(() => {
+    return allRequests.reduce<Record<string, string[]>>((accumulator, group) => {
+      accumulator[group.category] = group.data.map((item) => item.id);
+      return accumulator;
+    }, {});
+  }, [allRequests]);
+
+  const selectedOperations = useMemo<RequestOperation[]>(() => {
+    for (const group of allRequests) {
+      for (const item of group.data) {
+        if (selectedIds.includes(item.id)) {
+          return item.operations ?? [];
+        }
+      }
+    }
+
+    return [];
+  }, [allRequests, selectedIds]);
 
   const fetchData = useCallback(async () => {
     setIsContentReady(false);
@@ -54,14 +77,14 @@ export default function RequestListScreen() {
     }, [fetchData]),
   );
 
-  const handleActionComplete = async (action: 'APPROVE' | 'REJECT') => {
+  const handleActionComplete = async (operation: RequestOperation) => {
     if (selectedIds.length === 0) {
       return;
     }
 
     setIsLoading(true);
     try {
-      await requestService.processAction(selectedIds, action);
+      await requestService.processAction(selectedIds, operation);
       setSelectedIds([]);
       await fetchData();
     } finally {
@@ -97,12 +120,30 @@ export default function RequestListScreen() {
               showSelection={canBulkApprove}
               onSelect={(id, value) => {
                 setSelectedIds((prev) =>
-                  value ? [...prev, id] : prev.filter((itemId) => itemId !== id),
+                  value
+                    ? Array.from(new Set([...prev, id]))
+                    : prev.filter((itemId) => itemId !== id),
                 );
               }}
               openCategory={activeCategoryTitle}
+              canSelectRequest={canSelectRequest}
               onToggle={(categoryTitle) => {
-                setActiveCategoryTitle((prev) => (prev === categoryTitle ? null : categoryTitle));
+                setActiveCategoryTitle((prev) => {
+                  const closingCategory = prev === categoryTitle ? categoryTitle : prev;
+                  const closingCategoryIds = closingCategory
+                    ? (categoryRequestIds[closingCategory] ?? [])
+                    : [];
+
+                  if (closingCategoryIds.length > 0) {
+                    setSelectedIds((currentSelectedIds) =>
+                      currentSelectedIds.filter(
+                        (selectedId) => !closingCategoryIds.includes(selectedId),
+                      ),
+                    );
+                  }
+
+                  return prev === categoryTitle ? null : categoryTitle;
+                });
               }}
               onDetailsPress={(item) =>
                 router.push({
@@ -115,7 +156,11 @@ export default function RequestListScreen() {
         </>
       )}
 
-      <ActionDrawer selectedIds={selectedIds} onActionComplete={handleActionComplete} />
+      <ActionDrawer
+        selectedIds={selectedIds}
+        operations={selectedOperations}
+        onActionComplete={handleActionComplete}
+      />
 
       <RadioDateModal
         visible={modalVisible}

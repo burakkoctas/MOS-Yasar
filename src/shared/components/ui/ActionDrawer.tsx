@@ -1,3 +1,4 @@
+import { RequestOperation } from '@/src/features/request/types';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -6,11 +7,13 @@ import RotatingArrow from './RotatingArrow';
 
 interface ActionDrawerProps {
   selectedIds?: string[];
-  onActionComplete: (action: 'APPROVE' | 'REJECT') => void;
+  operations?: RequestOperation[];
+  onActionComplete: (operation: RequestOperation) => void;
 }
 
 export default function ActionDrawer({
   selectedIds = [],
+  operations = [],
   onActionComplete,
 }: ActionDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,30 +22,47 @@ export default function ActionDrawer({
   const animValue = useRef(new Animated.Value(0)).current;
   const fabEntranceAnim = useRef(new Animated.Value(0)).current;
 
+  const sortedOperations = useMemo(
+    () =>
+      [...operations].sort((left, right) => {
+        const leftOrder = left.displayOrder ?? Number.MAX_SAFE_INTEGER;
+        const rightOrder = right.displayOrder ?? Number.MAX_SAFE_INTEGER;
+
+        if (leftOrder !== rightOrder) {
+          return leftOrder - rightOrder;
+        }
+
+        return left.statusCode - right.statusCode;
+      }),
+    [operations],
+  );
+
   const layout = useMemo(() => {
-    // FAB ve drawer ayarlarini buradan degistirebilirsin.
-    // Farkli telefonlarda hizayi sabit tutmak icin degerler ekrana oranli hesaplanir.
-    const drawerBodyHeight = Math.min(Math.max(screenHeight * 0.22, 170), 235);
-    const drawerHeight = drawerBodyHeight + insets.bottom;
+    const operationCount = Math.max(sortedOperations.length, 1);
+    const actionButtonHeight = 58;
+    const actionGap = 12;
+    const drawerTopPadding = 45;
+    const drawerHorizontalPadding = 40;
+    const drawerBottomPadding = insets.bottom + 20;
+    const contentHeight =
+      operationCount * actionButtonHeight + Math.max(operationCount - 1, 0) * actionGap;
+    const drawerBodyHeight = Math.min(
+      Math.max(drawerTopPadding + contentHeight + drawerHorizontalPadding, 170),
+      screenHeight * 0.55,
+    );
+    const drawerHeight = drawerBodyHeight;
 
     return {
-      // Drawer acilma hizini buradan ayarla.
       drawerAnimationDuration: 550,
-      // FAB'in ekrana giris/cikis hizini buradan ayarla.
       fabAnimationDuration: 1000,
-      // FAB'in drawer acilinca ne kadar yukari cikacagini buradan ayarla.
-      fabLiftDistance: Math.max(drawerBodyHeight - 28, 130),
-      // FAB'in ilk gorunurken asagidan gelme mesafesi.
+      fabLiftDistance: Math.max(drawerBodyHeight -52, 118),
       fabEntranceOffset: Math.max(screenHeight * 0.18, 140),
-      // FAB alt boslugu; kucuk ekranlarda da orantili kalsin.
       fabBottomOffset: Math.max(screenHeight * 0.03, 24),
-      // FAB genisligi/yuksekligi; telefon genisligine gore hafif orantili.
       fabSize: Math.min(Math.max(screenWidth * 0.16, 58), 68),
-      // Drawer yuksekligi; farkli cihazlarda sabit piksel yerine oranli ilerler.
       drawerHeight,
-      drawerBodyHeight,
+      drawerBottomPadding,
     };
-  }, [insets.bottom, screenHeight, screenWidth]);
+  }, [insets.bottom, screenHeight, screenWidth, sortedOperations.length]);
 
   const closeDrawer = useCallback(() => {
     Animated.timing(animValue, {
@@ -53,7 +73,7 @@ export default function ActionDrawer({
   }, [animValue, layout.drawerAnimationDuration]);
 
   useEffect(() => {
-    if (selectedIds.length > 0) {
+    if (selectedIds.length > 0 && sortedOperations.length > 0) {
       Animated.spring(fabEntranceAnim, {
         toValue: 1,
         friction: 8,
@@ -78,6 +98,7 @@ export default function ActionDrawer({
     isOpen,
     layout.fabAnimationDuration,
     selectedIds.length,
+    sortedOperations.length,
   ]);
 
   const openDrawer = () => {
@@ -97,14 +118,14 @@ export default function ActionDrawer({
     }
   };
 
-  const handleBackendAction = (type: 'APPROVE' | 'REJECT') => {
+  const handleOperationPress = (operation: RequestOperation) => {
     Animated.timing(animValue, {
       toValue: 0,
       duration: layout.drawerAnimationDuration,
       useNativeDriver: true,
     }).start(() => {
       setIsOpen(false);
-      onActionComplete(type);
+      onActionComplete(operation);
     });
   };
 
@@ -150,36 +171,38 @@ export default function ActionDrawer({
           styles.drawerContainer,
           {
             height: layout.drawerHeight,
-            paddingBottom: insets.bottom + 20,
+            paddingBottom: layout.drawerBottomPadding,
             transform: [{ translateY: drawerTranslateY }],
           },
         ]}
       >
         <View style={styles.buttonColumn}>
-          <Pressable
-            style={[styles.actionButton, styles.approveButton]}
-            onPress={() => handleBackendAction('APPROVE')}
-          >
-            <Ionicons name="checkmark-circle" size={24} color="#2E7D32" />
-            <Text style={styles.buttonTextApprove}>
-              {selectedIds.length > 1 ? `Seçilenleri Onayla (${selectedIds.length})` : 'Onayla'}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            style={[styles.actionButton, styles.rejectButton]}
-            onPress={() => handleBackendAction('REJECT')}
-          >
-            <Ionicons name="close-circle" size={24} color="#C62828" />
-            <Text style={styles.buttonTextReject}>
-              {selectedIds.length > 1 ? 'Seçilenleri Reddet' : 'Reddet'}
-            </Text>
-          </Pressable>
+          {sortedOperations.map((operation) => (
+            <Pressable
+              key={`${operation.statusCode}-${operation.operationName}`}
+              style={[
+                styles.actionButton,
+                { backgroundColor: operation.backgroundColor || '#F4F4F4' },
+              ]}
+              onPress={() => handleOperationPress(operation)}
+            >
+              <Ionicons
+                name={operation.statusCode === 2 || operation.statusCode === 5 ? 'close-circle' : 'checkmark-circle'}
+                size={24}
+                color={operation.textColor || '#333'}
+              />
+              <Text style={[styles.buttonText, { color: operation.textColor || '#333' }]}>
+                {selectedIds.length > 1
+                  ? `${operation.operationName} (${selectedIds.length})`
+                  : operation.operationName}
+              </Text>
+            </Pressable>
+          ))}
         </View>
       </Animated.View>
 
       <Animated.View
-        pointerEvents={selectedIds.length > 0 ? 'box-none' : 'none'}
+        pointerEvents={selectedIds.length > 0 && sortedOperations.length > 0 ? 'box-none' : 'none'}
         style={[
           styles.fabEntranceWrapper,
           {
@@ -242,18 +265,8 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 20,
     width: '100%',
-    borderWidth: 1.5,
   },
-  approveButton: {
-    backgroundColor: 'rgba(76, 175, 80, 0.12)',
-    borderColor: 'rgba(76, 175, 80, 0.2)',
-  },
-  rejectButton: {
-    backgroundColor: 'rgba(244, 67, 54, 0.12)',
-    borderColor: 'rgba(244, 67, 54, 0.2)',
-  },
-  buttonTextApprove: { color: '#2E7D32', fontSize: 16, fontWeight: 'bold', marginLeft: 10 },
-  buttonTextReject: { color: '#C62828', fontSize: 16, fontWeight: 'bold', marginLeft: 10 },
+  buttonText: { fontSize: 16, fontWeight: 'bold', marginLeft: 10 },
   fabEntranceWrapper: {
     position: 'absolute',
     left: '50%',

@@ -12,6 +12,7 @@ interface FilteredListProps {
   onSelect: (id: string, isSelected: boolean) => void;
   variant?: 'request' | 'history';
   showSelection?: boolean;
+  canSelectRequest?: (item: RequestItem) => boolean;
 }
 
 const FilteredList: React.FC<FilteredListProps> = ({
@@ -23,6 +24,7 @@ const FilteredList: React.FC<FilteredListProps> = ({
   onSelect,
   variant = 'request',
   showSelection = true,
+  canSelectRequest,
 }) => {
   return (
     <ScrollView showsVerticalScrollIndicator={false} style={styles.list}>
@@ -39,6 +41,7 @@ const FilteredList: React.FC<FilteredListProps> = ({
           onSelect={onSelect}
           variant={variant}
           showSelection={showSelection}
+          canSelectRequest={canSelectRequest}
         />
       ))}
 

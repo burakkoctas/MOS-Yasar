@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
 import React, { ComponentProps } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
@@ -10,7 +10,7 @@ interface NavItem {
   id: string;
   label: string;
   iconName: IconName;
-  path: any;
+  path: '/' | '/past-requests' | '/settings';
 }
 
 const navItems: NavItem[] = [
@@ -23,13 +23,18 @@ const MainBottomNavbar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const { height: screenHeight } = useWindowDimensions();
+
+  // iOS'ta beyaz alanın gereksiz uzamaması için yükseklik ekran oranına göre hesaplanır.
+  const iosBaseHeight = Math.min(Math.max(screenHeight * 0.085, 74), 88);
+  const navbarHeight = Platform.OS === 'ios' ? iosBaseHeight + insets.bottom : 100;
 
   return (
     <View
       style={[
         styles.navbarContainer,
         {
-          height: Platform.OS === 'ios' ? 100 + insets.bottom : 100,
+          height: navbarHeight,
           paddingBottom: insets.bottom,
         },
       ]}
@@ -42,7 +47,20 @@ const MainBottomNavbar = () => {
         return (
           <Pressable
             key={item.id}
-            onPress={() => router.replace(item.path)}
+            onPress={() => {
+              if (isSelected) {
+                console.log('[navbar] ignored press on active tab', {
+                  path: item.path,
+                });
+                return;
+              }
+
+              console.log('[navbar] navigating to tab', {
+                from: pathname,
+                to: item.path,
+              });
+              router.replace(item.path);
+            }}
             android_ripple={{ color: 'transparent' }}
             style={({ pressed }) => [styles.navItemButton, { opacity: pressed ? 0.7 : 1 }]}
           >
@@ -74,8 +92,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 10,
   },
-  navItemButton: { flex: 1, justifyContent: 'center', alignItems: 'center', height: '100%' },
-  navLabel: { fontSize: 12, fontWeight: '400', marginTop: 4, letterSpacing: 0.2 },
+  navItemButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
+  },
+  navLabel: {
+    fontSize: 12,
+    fontWeight: '400',
+    marginTop: 4,
+    letterSpacing: 0.2,
+  },
 });
 
 export default MainBottomNavbar;

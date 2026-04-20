@@ -5,6 +5,8 @@ import StatusBadge from './StatusBadge';
 
 interface HeaderProps {
   statusLabel: string;
+  statusBackgroundColor?: string;
+  statusTextColor?: string;
   isSelected: boolean;
   onSelect: (value: boolean) => void;
   showCheckbox?: boolean;
@@ -12,6 +14,8 @@ interface HeaderProps {
 
 const RequestCardHeader: React.FC<HeaderProps> = ({
   statusLabel,
+  statusBackgroundColor,
+  statusTextColor,
   isSelected,
   onSelect,
   showCheckbox = true,
@@ -19,7 +23,12 @@ const RequestCardHeader: React.FC<HeaderProps> = ({
   return (
     <View style={styles.headerContainer}>
       <View style={styles.badgeWrapper}>
-        <StatusBadge status={statusLabel} fullWidth={true} />
+        <StatusBadge
+          status={statusLabel}
+          fullWidth={true}
+          backgroundColor={statusBackgroundColor}
+          textColor={statusTextColor}
+        />
       </View>
 
       {showCheckbox && (
