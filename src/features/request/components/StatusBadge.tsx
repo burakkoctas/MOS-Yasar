@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/shared/theme/useTheme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -14,40 +15,43 @@ export default function StatusBadge({
   backgroundColor,
   textColor,
 }: StatusBadgeProps) {
+  const { colors, isDark } = useTheme();
+
   const getBadgeStyle = () => {
     if (backgroundColor || textColor) {
       return {
-        bg: backgroundColor ?? '#F5F5F5',
-        text: textColor ?? '#616161',
+        bg: isDark ? 'transparent' : (backgroundColor ?? colors.statusDefaultBg),
+        border: isDark ? (backgroundColor ?? colors.border) : 'transparent',
+        text: textColor ?? colors.statusDefaultText,
       };
     }
 
     switch (status?.toLowerCase()) {
       case 'onaylandı':
-        return { bg: '#E8F5E9', text: '#2E7D32' };
+        return { bg: colors.statusApprovedBg, border: 'transparent', text: colors.statusApprovedText };
       case 'onay bekliyor':
-        return { bg: '#FFF3E0', text: '#EF6C00' };
+        return { bg: colors.statusPendingBg, border: 'transparent', text: colors.statusPendingText };
       case 'reddedildi':
-        return { bg: '#FFEBEE', text: '#C62828' };
+        return { bg: colors.statusRejectedBg, border: 'transparent', text: colors.statusRejectedText };
       default:
-        return { bg: '#F5F5F5', text: '#616161' };
+        return { bg: colors.statusDefaultBg, border: 'transparent', text: colors.statusDefaultText };
     }
   };
 
-  const colors = getBadgeStyle();
+  const badgeStyle = getBadgeStyle();
 
   return (
     <View
       style={[
         styles.badge,
-        { backgroundColor: colors.bg },
+        { backgroundColor: badgeStyle.bg, borderColor: badgeStyle.border, borderWidth: badgeStyle.border !== 'transparent' ? 1 : 0 },
         fullWidth && styles.fullWidthBadge,
       ]}
     >
       <Text
         style={[
           styles.text,
-          { color: colors.text },
+          { color: badgeStyle.text },
           fullWidth && styles.fullWidthText,
         ]}
       >

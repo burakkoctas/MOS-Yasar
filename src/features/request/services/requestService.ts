@@ -1,4 +1,4 @@
-import { appConfig } from '@/src/config/appConfig';
+import { API_BASE_URL } from '@/src/config/appConfig';
 import {
   RemoteAttachmentContentResponseDto,
   RemoteRequestAttachmentDto,
@@ -20,209 +20,18 @@ import {
   RequestOperation,
   RequestQuery,
 } from '@/src/features/request/types';
-import { createApiClient } from '@/src/shared/api/apiClient';
+import { FetchApiClient } from '@/src/shared/api/apiClient';
 import { DUMMY_DATA } from '@/src/shared/api/mockData';
 import { authStore } from '@/src/store/useAuthStore';
 
-const REMOTE_REQUESTS_BASE_URL = 'https://mos-tst.yasar.com.tr';
 const GET_REQUESTS_SINGLE_PATH = '/mos/api/v3/GetRequestsSingle';
 const GET_REQUESTS_BY_DATE_RANGE_PATH = '/mos/api/v3/GetRequestsByDateRange';
 const GET_DESCRIPTION_PATH = '/mos/api/v3/GetDescription';
 const GET_ATTACHMENT_CONTENT_PATH = '/mos/api/v3/GetAttachmentContent';
-const SUBCATEGORY_DEMO_USERNAME = 'subcategory-demo';
 
 let remoteGroupsCache: CategoryGroup[] = [];
 let remoteHistoryGroupsCache: CategoryGroup[] = [];
 
-const SUBCATEGORY_DEMO_GROUPS: CategoryGroup[] = [
-  {
-    category: 'ATF',
-    data: [
-      {
-        id: 'demo-atf-1',
-        istekNo: '7036037880',
-        gonderen: 'Gökhan GÖK',
-        sirket: 'YBP Satış Organizasyonu',
-        statu: 'ONAY BEKLİYOR',
-        baslangic: '30.04.2025',
-        bitis: '30.04.2025',
-        onayDurumu: 'Toplu Onaylanabilir',
-        isim: 'Gökhan GÖK',
-        tarih: '21.10.2025',
-        belgeNo: '7036037880',
-        acilis: '30.04.2025',
-        modul: 'ATF',
-        kategori: 'ATF',
-        descriptionList: [
-          'ATF Belge No: 3012512',
-          'Aktivite Başlangıç Tarihi: 30.04.2025',
-          'Aktivite Bitiş Tarihi: 30.04.2025',
-          'Satış Org: YBP Satış Organizasyonu',
-          'Fiyat Grubu: GROSERİ',
-        ],
-        statusCode: 0,
-        statusLabel: 'ONAY BEKLİYOR',
-        statusBackgroundColor: '#FFF2BE',
-        statusTextColor: '#FFB800',
-        multipleApprove: true,
-        operations: [
-          {
-            operationName: 'DÜZELTME TALEP ET',
-            statusCode: 4,
-            requiresDescription: 1,
-            backgroundColor: '#FFF2BE',
-            textColor: '#FFB800',
-            displayOrder: 1,
-          },
-          {
-            operationName: 'ONAY',
-            statusCode: 3,
-            requiresDescription: 0,
-            backgroundColor: '#D6F2D1',
-            textColor: '#51D23C',
-            displayOrder: 2,
-          },
-          {
-            operationName: 'REDDET',
-            statusCode: 5,
-            requiresDescription: 1,
-            backgroundColor: '#FDEBEB',
-            textColor: '#FF4848',
-            displayOrder: 3,
-          },
-        ],
-      },
-      {
-        id: 'demo-atf-2',
-        istekNo: '7036037881',
-        gonderen: 'Gökhan GÖK',
-        sirket: 'YBP Satış Organizasyonu',
-        statu: 'ONAY BEKLİYOR',
-        baslangic: '01.05.2025',
-        bitis: '01.05.2025',
-        onayDurumu: 'Toplu Onaylanabilir',
-        descriptionList: [
-          'ATF Belge No: 3012513',
-          'Aktivite Başlangıç Tarihi: 01.05.2025',
-          'Aktivite Bitiş Tarihi: 01.05.2025',
-          'Satış Org: YBP Satış Organizasyonu',
-        ],
-        statusCode: 0,
-        statusLabel: 'ONAY BEKLİYOR',
-        statusBackgroundColor: '#FFF2BE',
-        statusTextColor: '#FFB800',
-        subCategory: 'Clio',
-        multipleApprove: true,
-        operations: [
-          {
-            operationName: 'ONAY',
-            statusCode: 3,
-            requiresDescription: 0,
-            backgroundColor: '#D6F2D1',
-            textColor: '#51D23C',
-            displayOrder: 1,
-          },
-          {
-            operationName: 'REDDET',
-            statusCode: 5,
-            requiresDescription: 1,
-            backgroundColor: '#FDEBEB',
-            textColor: '#FF4848',
-            displayOrder: 2,
-          },
-        ],
-      },
-      {
-        id: 'demo-atf-3',
-        istekNo: '7036037882',
-        gonderen: 'Ayşegül Melike KÖKNAR',
-        sirket: 'YBP Satış Organizasyonu',
-        statu: 'ONAY BEKLİYOR',
-        baslangic: '02.05.2025',
-        bitis: '02.05.2025',
-        onayDurumu: 'Toplu Onaylanabilir',
-        descriptionList: [
-          'ATF Belge No: 3012514',
-          'Aktivite Başlangıç Tarihi: 02.05.2025',
-          'Aktivite Bitiş Tarihi: 02.05.2025',
-          'Satış Org: YBP Satış Organizasyonu',
-        ],
-        statusCode: 0,
-        statusLabel: 'ONAY BEKLİYOR',
-        statusBackgroundColor: '#FFF2BE',
-        statusTextColor: '#FFB800',
-        subCategory: 'Clio',
-        multipleApprove: true,
-        operations: [
-          {
-            operationName: 'ONAY',
-            statusCode: 3,
-            requiresDescription: 0,
-            backgroundColor: '#D6F2D1',
-            textColor: '#51D23C',
-            displayOrder: 1,
-          },
-          {
-            operationName: 'REDDET',
-            statusCode: 5,
-            requiresDescription: 1,
-            backgroundColor: '#FDEBEB',
-            textColor: '#FF4848',
-            displayOrder: 2,
-          },
-        ],
-      },
-      {
-        id: 'demo-atf-4',
-        istekNo: '7036037883',
-        gonderen: 'Ahmet AKÇAY',
-        sirket: 'YBP Satış Organizasyonu',
-        statu: 'ONAY BEKLİYOR',
-        baslangic: '03.05.2025',
-        bitis: '03.05.2025',
-        onayDurumu: 'Toplu Onaylanabilir',
-        descriptionList: [
-          'ATF Belge No: 3012515',
-          'Aktivite Başlangıç Tarihi: 03.05.2025',
-          'Aktivite Bitiş Tarihi: 03.05.2025',
-          'Satış Org: YBP Satış Organizasyonu',
-        ],
-        statusCode: 0,
-        statusLabel: 'ONAY BEKLİYOR',
-        statusBackgroundColor: '#FFF2BE',
-        statusTextColor: '#FFB800',
-        subCategory: 'Megane',
-        multipleApprove: true,
-        operations: [
-          {
-            operationName: 'DÜZELTME TALEP ET',
-            statusCode: 4,
-            requiresDescription: 1,
-            backgroundColor: '#FFF2BE',
-            textColor: '#FFB800',
-            displayOrder: 1,
-          },
-          {
-            operationName: 'ONAY',
-            statusCode: 3,
-            requiresDescription: 0,
-            backgroundColor: '#D6F2D1',
-            textColor: '#51D23C',
-            displayOrder: 2,
-          },
-          {
-            operationName: 'REDDET',
-            statusCode: 5,
-            requiresDescription: 1,
-            backgroundColor: '#FDEBEB',
-            textColor: '#FF4848',
-            displayOrder: 3,
-          },
-        ],
-      },
-    ],
-  },
-];
 
 function wait() {
   return Promise.resolve();
@@ -748,9 +557,6 @@ function isRemoteRequestListEnabled() {
   return session?.mode === 'remote' && Boolean(session.accessToken);
 }
 
-function isSubcategoryDemoSession() {
-  return authStore.getState().session?.user.username === SUBCATEGORY_DEMO_USERNAME;
-}
 
 function getCachedRemoteRequestById(id: string, source?: 'request' | 'history') {
   const cacheSource = source === 'history' ? remoteHistoryGroupsCache : remoteGroupsCache;
@@ -781,15 +587,13 @@ export interface RequestService {
 const mockRequestService: RequestService = {
   async getRequests(): Promise<CategoryGroup[]> {
     await wait();
-    return isSubcategoryDemoSession()
-      ? cloneGroups(SUBCATEGORY_DEMO_GROUPS)
-      : cloneGroups(mockGroups);
+    return cloneGroups(mockGroups);
   },
 
   async getRequestHistory(query?: RequestQuery): Promise<CategoryGroup[]> {
     await wait();
 
-    const sourceGroups = isSubcategoryDemoSession() ? SUBCATEGORY_DEMO_GROUPS : mockGroups;
+    const sourceGroups = mockGroups;
 
     return cloneGroups(sourceGroups)
       .map((group) => ({
@@ -802,7 +606,7 @@ const mockRequestService: RequestService = {
   async getRequestById(id: string): Promise<RequestItem | null> {
     await wait();
 
-    const sourceGroups = isSubcategoryDemoSession() ? SUBCATEGORY_DEMO_GROUPS : mockGroups;
+    const sourceGroups = mockGroups;
 
     for (const group of sourceGroups) {
       const match = group.data.find((item) => item.id === id);
@@ -825,7 +629,7 @@ const mockRequestService: RequestService = {
   async processAction(ids: string[], operation: RequestOperation): Promise<void> {
     await wait();
 
-    const targetGroups = isSubcategoryDemoSession() ? SUBCATEGORY_DEMO_GROUPS : mockGroups;
+    const targetGroups = mockGroups;
 
     targetGroups.forEach((group) => {
       group.data = group.data.map((item) =>
@@ -840,7 +644,7 @@ const mockRequestService: RequestService = {
   },
 };
 
-const apiClient = createApiClient(appConfig.api.baseUrl || REMOTE_REQUESTS_BASE_URL);
+const apiClient = new FetchApiClient(API_BASE_URL);
 
 const remoteRequestService: RequestService = {
   async getRequests() {

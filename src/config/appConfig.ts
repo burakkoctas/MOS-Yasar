@@ -1,5 +1,12 @@
 import Constants from 'expo-constants';
 
+export const KEYCLOAK_BASE_URL = 'https://oauthtest.yasar.com.tr';
+export const API_BASE_URL = 'https://mos-tst.yasar.com.tr';
+export const APP_VERSION_BY_PLATFORM = {
+  ios: '2.4.4',
+  android: '2.4.1',
+} as const;
+
 export type ApiMode = 'mock' | 'remote';
 
 export interface RuntimeApiConfig {
@@ -22,12 +29,12 @@ const extra = (Constants.expoConfig?.extra ?? {}) as ExpoExtraConfig;
 
 const fallbackConfig: AppConfig = {
   api: {
-    mode: 'mock',
-    baseUrl: '',
+    mode: 'remote',
+    baseUrl: API_BASE_URL,
     timeoutMs: 10000,
   },
   auth: {
-    mode: 'mock',
+    mode: 'remote',
     timeoutMs: 10000,
   },
 };

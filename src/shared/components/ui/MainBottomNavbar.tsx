@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
 import React, { ComponentProps } from 'react';
@@ -20,6 +21,7 @@ const navItems: NavItem[] = [
 ];
 
 const MainBottomNavbar = () => {
+  const { colors } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
@@ -36,12 +38,14 @@ const MainBottomNavbar = () => {
         {
           height: navbarHeight,
           paddingBottom: insets.bottom,
+          backgroundColor: colors.background,
+          borderTopColor: colors.borderNavbar,
         },
       ]}
     >
       {navItems.map((item) => {
         const isSelected = pathname === item.path;
-        const currentColor = isSelected ? '#1976D2' : '#A0A0A0';
+        const currentColor = isSelected ? colors.primary : colors.textDisabled;
         const activeIconName = item.iconName.replace('-outline', '') as IconName;
 
         return (
@@ -80,9 +84,7 @@ const MainBottomNavbar = () => {
 const styles = StyleSheet.create({
   navbarContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
     justifyContent: 'space-around',
     alignItems: 'center',
     elevation: 20,

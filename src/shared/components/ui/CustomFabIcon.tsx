@@ -11,7 +11,7 @@ export default function CustomFabIcon({
   color = '#1976D2',
 }: CustomFabIconProps) {
   return (
-    <Svg width={size} height={size} viewBox="25 30 85 75" fill="none">
+    <Svg width={size} height={size} viewBox="22 25 85 85" fill="none">
       <Path
         d="M69.02,38.41L97.96,67.34L69.02,96.28"
         stroke={color}

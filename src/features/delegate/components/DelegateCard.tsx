@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -14,28 +15,29 @@ export default function DelegateCard({
   onDelete,
   showDelete = true,
 }: DelegateCardProps) {
+  const { colors } = useTheme();
   const EmailRow = ({ value }: { value: string }) => (
     <View style={styles.emailRow}>
       <View style={styles.emailLabelColumn}>
-        <Text style={styles.label}>Alıcı</Text>
-        <Text style={styles.label}>E-posta</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>Alıcı</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>E-posta</Text>
       </View>
-      <Text style={styles.separator}>:</Text>
-      <Text style={styles.emailValue}>{value}</Text>
+      <Text style={[styles.separator, { color: colors.textSecondary }]}>:</Text>
+      <Text style={[styles.emailValue, { color: colors.textPrimary }]}>{value}</Text>
     </View>
   );
 
   const InfoRow = ({ label, value }: { label: string; value: string }) => (
     <View style={styles.infoRow}>
-      <Text style={styles.inlineText}>
-        <Text style={styles.label}>{label}: </Text>
-        <Text style={styles.value}>{value}</Text>
+      <Text style={[styles.inlineText, { color: colors.textPrimary }]}>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>{label}: </Text>
+        <Text style={[styles.value, { color: colors.textPrimary }]}>{value}</Text>
       </Text>
     </View>
   );
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.borderCard }]}>
       <View style={styles.content}>
         <EmailRow value={delegate.email} />
         <InfoRow label="Başlangıç Tarihi" value={delegate.startDate} />
@@ -46,7 +48,7 @@ export default function DelegateCard({
       {showDelete && onDelete && (
         <View style={styles.actionsRow}>
           <Pressable style={styles.deleteButton} onPress={() => onDelete(delegate.id)}>
-            <Ionicons name="trash-outline" size={22} color="#D32F2F" />
+            <Ionicons name="trash-outline" size={22} color={colors.dangerText} />
           </Pressable>
         </View>
       )}
@@ -56,14 +58,12 @@ export default function DelegateCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
     borderRadius: 18,
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#EBEBEB',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -86,13 +86,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14,
     fontWeight: '700',
-    color: '#555',
   },
   emailValue: {
     flex: 1,
     fontSize: 13.5,
     lineHeight: 19,
-    color: '#333',
     fontWeight: '500',
   },
   infoRow: {
@@ -101,17 +99,14 @@ const styles = StyleSheet.create({
   inlineText: {
     fontSize: 13.5,
     lineHeight: 20,
-    color: '#333',
   },
   label: {
     fontWeight: '700',
-    color: '#555',
     fontSize: 13.5,
     lineHeight: 18,
   },
   value: {
     fontWeight: '500',
-    color: '#333',
   },
   actionsRow: {
     marginTop: 8,

@@ -2,9 +2,11 @@ import { authService } from '@/src/features/auth/services/authService';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import CustomFabIcon from '@/src/shared/components/ui/CustomFabIcon';
 import YasarBilgiLogo from '@/src/shared/components/ui/YasarBilgiLogo';
+import { AppColors } from '@/src/shared/theme/colors';
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Keyboard,
@@ -20,6 +22,8 @@ import {
 } from 'react-native';
 
 export default function RegisterScreen() {
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -76,14 +80,14 @@ export default function RegisterScreen() {
             headerTitle: '',
             headerTransparent: false,
             headerShadowVisible: false,
-            headerStyle: { backgroundColor: '#FAFAFA' },
+            headerStyle: { backgroundColor: colors.background },
             headerLeft: () => (
               <TouchableOpacity
                 onPress={() => router.back()}
                 style={styles.backButton}
                 activeOpacity={0.6}
               >
-                <Ionicons name="arrow-back" size={28} color="#1976D2" />
+                <Ionicons name="arrow-back" size={28} color={colors.primary} />
               </TouchableOpacity>
             ),
           }}
@@ -97,7 +101,7 @@ export default function RegisterScreen() {
           <View style={[styles.logoContainer, isKeyboardVisible && styles.logoContainerKeyboardVisible]}>
             {!isKeyboardVisible && (
               <View style={styles.iconWrapper}>
-                <CustomFabIcon size={55} color="#1976D2" />
+                <CustomFabIcon size={55} color={colors.primary} />
               </View>
             )}
             <Text style={[styles.appName, isKeyboardVisible && styles.appNameKeyboardVisible]}>
@@ -110,7 +114,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="Ad"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={colors.textDisabled}
                 value={firstName}
                 onChangeText={setFirstName}
               />
@@ -120,7 +124,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="Soyad"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={colors.textDisabled}
                 value={lastName}
                 onChangeText={setLastName}
               />
@@ -130,7 +134,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="E-posta"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={colors.textDisabled}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -138,8 +142,15 @@ export default function RegisterScreen() {
               />
             </View>
 
-            <TouchableOpacity style={styles.registerButton} onPress={handleRegister} activeOpacity={0.8}>
-              <Text style={styles.registerButtonText}>Üye Ol</Text>
+            <TouchableOpacity
+              style={[
+                styles.registerButton,
+                isDark && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary },
+              ]}
+              onPress={handleRegister}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.registerButtonText, isDark && { color: colors.primary }]}>Üye Ol</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -156,8 +167,8 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   backButton: { marginLeft: 5, padding: 5 },
   scrollContent: {
     flexGrow: 1,
@@ -171,9 +182,9 @@ const styles = StyleSheet.create({
   iconWrapper: {
     width: 100,
     height: 100,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderWidth: 3,
-    borderColor: '#1976D2',
+    borderColor: colors.primary,
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
@@ -182,7 +193,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1976D2',
+    color: colors.primary,
     letterSpacing: 0.5,
   },
   appNameKeyboardVisible: {
@@ -191,14 +202,14 @@ const styles = StyleSheet.create({
   formContainer: { width: '100%' },
   inputWrapper: { marginBottom: 20 },
   input: {
-    backgroundColor: '#FFF',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#EBEBEB',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 15,
-    color: '#333',
+    color: colors.textPrimary,
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -206,19 +217,19 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   registerButton: {
-    backgroundColor: '#1976D2',
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     borderRadius: 25,
     alignItems: 'center',
     marginTop: 20,
-    shadowColor: '#1976D2',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 4,
   },
   registerButtonText: {
-    color: '#FFF',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 1,

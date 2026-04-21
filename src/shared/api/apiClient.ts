@@ -10,12 +10,25 @@ export interface ApiClient {
   request<T>(path: string, options?: ApiRequestOptions): Promise<T>;
 }
 
-const DEFAULT_HEADERS = {
-  Accept: 'application/json',
-};
+export class ApiError extends Error {
+  constructor(
+    public readonly code: number | string,
+    message: string,
+    public readonly raw?: unknown,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
 
-const DEBUG_WEBHOOK_URL = 'https://webhook.site/245f5eee-1574-4f7b-990f-58d469ca8513';
-const DIVERT_REAL_REQUESTS_TO_DEBUG_WEBHOOK = true;
+const DEFAULT_TIMEOUT_MS = 15000;
+
+const DEFAULT_HEADERS: Record<string, string> = {
+  Accept: 'application/json',
+  // Prevents HTTP Keep-Alive connection reuse, which can cause HTTP desync
+  // issues when the server responds with Transfer-Encoding: chunked + gzip.
+  Connection: 'close',
+};
 
 function looksLikeRawHttpMessage(value: string) {
   const trimmedValue = value.trimStart();
@@ -61,79 +74,56 @@ function buildRequestBody(body: unknown) {
   return JSON.stringify(body);
 }
 
-function maskHeaderValue(key: string, value: string) {
-  const normalizedKey = key.toLowerCase();
-
-  if (normalizedKey === 'authorization') {
-    const [scheme] = value.split(' ');
-    return scheme ? `${scheme} ***MASKED***` : '***MASKED***';
-  }
-
-  if (normalizedKey === 'cookie' || normalizedKey === 'set-cookie') {
-    return value
-      .split(';')
-      .map((part) => {
-        const [cookieKey] = part.split('=');
-        return cookieKey?.trim() ? `${cookieKey.trim()}=***MASKED***` : '***MASKED***';
-      })
-      .join('; ');
-  }
-
-  return value;
+interface KeycloakErrorBody {
+  error: string;
+  error_description?: string;
 }
 
-function sanitizeBodyForDebug(body: string | undefined) {
-  if (!body) {
-    return undefined;
-  }
-
-  return body
-    .replace(/("password"\s*:\s*")[^"]*"/gi, '$1***MASKED***"')
-    .replace(/("access_token"\s*:\s*")[^"]*"/gi, '$1***MASKED***"')
-    .replace(/("refresh_token"\s*:\s*")[^"]*"/gi, '$1***MASKED***"')
-    .replace(/("token"\s*:\s*")[^"]*"/gi, '$1***MASKED***"')
-    .replace(/(password=)[^&\s]*/gi, '$1***MASKED***');
+interface SpringBootErrorBody {
+  timestamp: string;
+  status: number;
+  error: string;
+  path: string;
 }
 
-function sendDebugMirror(payload: {
-  url: string;
-  method: string;
-  headers: Record<string, string>;
-  body?: string;
-}) {
-  const maskedHeaders = Object.fromEntries(
-    Object.entries(payload.headers).map(([key, value]) => [key, maskHeaderValue(key, value)]),
+function isKeycloakError(body: unknown): body is KeycloakErrorBody {
+  return Boolean(
+    body &&
+      typeof body === 'object' &&
+      'error' in body &&
+      typeof (body as Record<string, unknown>).error === 'string' &&
+      !('status' in body),
   );
-
-  const maskedBody = sanitizeBodyForDebug(payload.body);
-
-  void fetch(DEBUG_WEBHOOK_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      mirroredAt: new Date().toISOString(),
-      request: {
-        url: payload.url,
-        method: payload.method,
-        headers: maskedHeaders,
-        body: maskedBody,
-      },
-    }),
-  }).catch(() => {
-    // Debug mirror failures should never affect the real request flow.
-  });
 }
 
-function createDebugOnlyResponse<T>(): T {
-  return {
-    code: 202,
-    message: 'Request diverted to debug webhook.',
-    data: null,
-    dataList: null,
-    title: null,
-  } as T;
+function isSpringBootError(body: unknown): body is SpringBootErrorBody {
+  return Boolean(
+    body &&
+      typeof body === 'object' &&
+      'status' in body &&
+      'error' in body &&
+      'path' in body,
+  );
+}
+
+async function parseErrorResponse(response: Response): Promise<ApiError> {
+  let body: unknown;
+
+  try {
+    body = await response.json();
+  } catch {
+    return new ApiError(response.status, `HTTP ${response.status}`);
+  }
+
+  if (isKeycloakError(body)) {
+    return new ApiError(body.error, body.error_description ?? body.error, body);
+  }
+
+  if (isSpringBootError(body)) {
+    return new ApiError(body.status, body.error, body);
+  }
+
+  return new ApiError(response.status, `HTTP ${response.status}`, body);
 }
 
 export class FetchApiClient implements ApiClient {
@@ -152,30 +142,14 @@ export class FetchApiClient implements ApiClient {
       headers['Content-Type'] = 'application/json';
     }
 
-    sendDebugMirror({
-      url: requestUrl,
-      method,
-      headers,
-      body: requestBody,
-    });
-
-    if (DIVERT_REAL_REQUESTS_TO_DEBUG_WEBHOOK) {
-      console.log('[api] real request skipped and diverted to debug webhook', {
-        method,
-        requestUrl,
-      });
-      return createDebugOnlyResponse<T>();
-    }
-
     console.log('[api] request start', {
       method,
       requestUrl,
       hasBody: requestBody !== undefined,
-      bodyPreview:
-        typeof requestBody === 'string'
-          ? requestBody.slice(0, 300)
-          : undefined,
     });
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
     let response: Response;
 
@@ -184,17 +158,19 @@ export class FetchApiClient implements ApiClient {
         method,
         headers,
         body: requestBody,
+        signal: controller.signal,
       });
     } catch (error) {
-      console.log('[api] request network error', {
-        method,
-        requestUrl,
-        error,
-      });
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new ApiError('TIMEOUT', 'İstek zaman aşımına uğradı.');
+      }
+      console.log('[api] network error', { method, requestUrl, error });
       throw error;
+    } finally {
+      clearTimeout(timeoutId);
     }
 
-    console.log('[api] request response', {
+    console.log('[api] response', {
       method,
       requestUrl,
       status: response.status,
@@ -202,7 +178,7 @@ export class FetchApiClient implements ApiClient {
     });
 
     if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
+      throw await parseErrorResponse(response);
     }
 
     return (await response.json()) as T;

@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/shared/theme/useTheme';
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { RequestItem as RequestItemType } from '../types';
@@ -22,13 +23,15 @@ const RequestItem: React.FC<RequestItemProps> = ({
   showCheckbox = true,
   compact = false,
 }) => {
+  const { colors } = useTheme();
+
   if (!requestData) {
     return null;
   }
 
   return (
     <Pressable
-      style={[styles.cardContainer, compact && styles.cardContainerCompact]}
+      style={[styles.cardContainer, compact && styles.cardContainerCompact, { backgroundColor: colors.surface, borderColor: colors.borderCard }]}
       onPress={() => onItemPress(requestData)}
     >
       <RequestCardHeader
@@ -53,13 +56,11 @@ const RequestItem: React.FC<RequestItemProps> = ({
 
 const styles = StyleSheet.create({
   cardContainer: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 8,
     marginHorizontal: 10,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
     overflow: 'hidden',
     shadowColor: '#DCE6F2',
     shadowOffset: { width: 0, height: 1 },

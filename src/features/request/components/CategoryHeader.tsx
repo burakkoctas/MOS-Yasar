@@ -1,5 +1,7 @@
+import { AppColors } from '@/src/shared/theme/colors';
+import { useTheme } from '@/src/shared/theme/useTheme';
 import ExpoCheckbox from 'expo-checkbox';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface CategoryHeaderProps {
@@ -25,6 +27,8 @@ export default function CategoryHeader({
   compact = false,
   keepCheckboxVisible = false,
 }: CategoryHeaderProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View
       style={[
@@ -60,7 +64,7 @@ export default function CategoryHeader({
           <View pointerEvents="none">
             <ExpoCheckbox
               value={isAllSelected}
-              color={isAllSelected ? '#2196F3' : undefined}
+              color={isAllSelected ? colors.primary : undefined}
               style={styles.checkbox}
             />
           </View>
@@ -70,13 +74,12 @@ export default function CategoryHeader({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderRadius: 50,
-    shadowColor: '#ffffff',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -87,11 +90,11 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     marginHorizontal: 0,
   },
-  headerInactive: { backgroundColor: '#efefef', borderWidth: 0 },
+  headerInactive: { backgroundColor: colors.surfaceInactive, borderWidth: 0 },
   headerActive: {
-    backgroundColor: '#E3F2FD',
+    backgroundColor: colors.primaryLight,
     borderWidth: 1,
-    borderColor: '#BBDEFB',
+    borderColor: colors.primaryLightBorder,
   },
   clickableArea: {
     flex: 1,
@@ -108,7 +111,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -119,11 +122,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginRight: 10,
   },
-  countText: { fontSize: 18, fontWeight: 'bold', color: '#1976D2' },
+  countText: { fontSize: 18, fontWeight: 'bold', color: colors.primary },
   countTextCompact: { fontSize: 14 },
-  title: { fontSize: 16, fontWeight: '600', color: '#000000', marginLeft: 10 },
+  title: { fontSize: 16, fontWeight: '600', color: colors.textDark, marginLeft: 10 },
   titleCompact: { fontSize: 14, marginLeft: 4 },
-  titleActive: { color: '#1976D2' },
+  titleActive: { color: colors.primary },
   rightContent: {
     paddingVertical: 10,
     paddingRight: 15,

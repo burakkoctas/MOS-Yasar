@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -15,17 +16,18 @@ export default function RequestDetailHeader({
   onDelete,
   topInset,
 }: RequestDetailHeaderProps) {
+  const { colors } = useTheme();
   return (
-    <View style={[styles.headerContainer, { paddingTop: topInset + 6 }]}>
+    <View style={[styles.headerContainer, { paddingTop: topInset + 6, backgroundColor: colors.background, borderBottomColor: colors.borderNavbar }]}>
       <Pressable style={styles.headerSideButton} onPress={onBack}>
-        <Ionicons name="arrow-back" size={26} color="#1976D2" />
+        <Ionicons name="arrow-back" size={26} color={colors.primary} />
       </Pressable>
       <View style={styles.headerTitleWrapper}>
-        <Text style={styles.headerTitle}>{title}</Text>
+        <Text style={[styles.headerTitle, { color: colors.primary }]}>{title}</Text>
       </View>
       {onDelete ? (
         <Pressable style={styles.headerSideButton} onPress={onDelete}>
-          <Ionicons name="trash-outline" size={23} color="#1976D2" />
+          <Ionicons name="trash-outline" size={23} color={colors.primary} />
         </Pressable>
       ) : (
         <View style={styles.headerSideButton} />
@@ -36,13 +38,11 @@ export default function RequestDetailHeader({
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: '#FAFAFA',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   headerSideButton: {
     width: 42,
@@ -59,6 +59,5 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1976D2',
   },
 });

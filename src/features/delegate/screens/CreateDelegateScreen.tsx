@@ -1,4 +1,6 @@
 import AppLoader from '@/src/shared/components/ui/AppLoader';
+import { AppColors } from '@/src/shared/theme/colors';
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Stack, useRouter } from 'expo-router';
@@ -26,6 +28,7 @@ const titleData = [
 ];
 
 export default function CreateDelegateScreen() {
+  const { colors } = useTheme();
   const router = useRouter();
   const {
     email,
@@ -43,6 +46,7 @@ export default function CreateDelegateScreen() {
   const [showPicker, setShowPicker] = useState<'start' | 'end' | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const selectedTitleNames = useMemo(
     () =>
       selectedTitles
@@ -108,12 +112,12 @@ export default function CreateDelegateScreen() {
           headerShown: true,
           headerTitle: 'Vekalet Oluştur',
           headerTitleAlign: 'center',
-          headerTitleStyle: { color: '#1976D2', fontWeight: 'normal', fontSize: 18 },
-          headerStyle: { backgroundColor: '#fff' },
+          headerTitleStyle: { color: colors.primary, fontWeight: 'normal', fontSize: 18 },
+          headerStyle: { backgroundColor: colors.background },
           headerShadowVisible: false,
           headerLeft: () => (
             <Pressable onPress={() => router.back()} style={{ marginLeft: 5 }}>
-              <Ionicons name="arrow-back" size={28} color="#1976D2" />
+              <Ionicons name="arrow-back" size={28} color={colors.primary} />
             </Pressable>
           ),
           headerRight: () => (
@@ -130,7 +134,7 @@ export default function CreateDelegateScreen() {
           <TextInput
             style={styles.input}
             placeholder="E-posta adresi giriniz"
-            placeholderTextColor="#A0A0A0"
+            placeholderTextColor={colors.textDisabled}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -144,14 +148,14 @@ export default function CreateDelegateScreen() {
             <Text style={startDate ? styles.dateText : styles.placeholderText} numberOfLines={1}>
               {startDate ? formatDate(startDate) : 'Başlangıç Tarihi'}
             </Text>
-            <Ionicons name="calendar-outline" size={20} color="#1976D2" />
+            <Ionicons name="calendar-outline" size={20} color={colors.primary} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.dateInput} onPress={() => setShowPicker('end')}>
             <Text style={endDate ? styles.dateText : styles.placeholderText} numberOfLines={1}>
               {endDate ? formatDate(endDate) : 'Bitiş Tarihi'}
             </Text>
-            <Ionicons name="calendar-outline" size={20} color="#1976D2" />
+            <Ionicons name="calendar-outline" size={20} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -162,7 +166,7 @@ export default function CreateDelegateScreen() {
               <Ionicons
                 name={scope === 'ALL' ? 'radio-button-on' : 'radio-button-off'}
                 size={22}
-                color="#1976D2"
+                color={colors.primary}
               />
               <Text style={styles.radioLabel}>Tümü</Text>
             </TouchableOpacity>
@@ -171,7 +175,7 @@ export default function CreateDelegateScreen() {
               <Ionicons
                 name={scope === 'SELECT' ? 'radio-button-on' : 'radio-button-off'}
                 size={22}
-                color="#1976D2"
+                color={colors.primary}
               />
               <Text style={styles.radioLabel}>Başlık Seç</Text>
             </TouchableOpacity>
@@ -185,7 +189,7 @@ export default function CreateDelegateScreen() {
               onPress={() => router.push('/settings/select-titles')}
             >
               <Text style={styles.selectionButtonText}>Seçili başlıklar</Text>
-              <Ionicons name="chevron-forward" size={22} color="#1976D2" />
+              <Ionicons name="chevron-forward" size={22} color={colors.primary} />
             </TouchableOpacity>
 
             {selectedTitleNames.length > 0 && (
@@ -216,35 +220,35 @@ export default function CreateDelegateScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { padding: 20, paddingBottom: 40 },
-  saveButtonText: { color: '#1976D2', fontWeight: '600', fontSize: 16 },
-  label: { fontSize: 15, fontWeight: '700', color: '#333', marginBottom: 8 },
+  saveButtonText: { color: colors.primary, fontWeight: '600', fontSize: 16 },
+  label: { fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 },
   inputGroup: { marginBottom: 25 },
-  input: { backgroundColor: '#F8F9FA', borderWidth: 1, borderColor: '#EBEBEB', borderRadius: 12, padding: 15, fontSize: 16, color: '#333' },
+  input: { backgroundColor: colors.surfaceInput, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 15, fontSize: 16, color: colors.textPrimary },
   dateContainer: { flexDirection: 'row', gap: 12, marginBottom: 25 },
-  dateInput: { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F8F9FA', borderWidth: 1, borderColor: '#EBEBEB', borderRadius: 12, paddingHorizontal: 10, height: 55 },
-  dateText: { flex: 1, fontSize: 13, color: '#333', fontWeight: '500', marginRight: 8 },
-  placeholderText: { flex: 1, fontSize: 13, color: '#A0A0A0', marginRight: 8 },
+  dateInput: { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.surfaceInput, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 10, height: 55 },
+  dateText: { flex: 1, fontSize: 13, color: colors.textPrimary, fontWeight: '500', marginRight: 8 },
+  placeholderText: { flex: 1, fontSize: 13, color: colors.textDisabled, marginRight: 8 },
   radioRow: { flexDirection: 'row', gap: 30, marginTop: 5 },
   radioItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  radioLabel: { fontSize: 16, color: '#333', fontWeight: '500' },
+  radioLabel: { fontSize: 16, color: colors.textPrimary, fontWeight: '500' },
   selectionButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 18,
     paddingHorizontal: 15,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 15,
     borderWidth: 2,
-    borderColor: '#e0e0e0',
+    borderColor: colors.borderLight,
     elevation: 1,
-    shadowColor: '#ffffff', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2,
   },
-  selectionButtonText: { fontSize: 16, color: '#1976D2', fontWeight: '600' },
+  selectionButtonText: { fontSize: 16, color: colors.primary, fontWeight: '600' },
   selectedPillsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 15 },
-  smallPill: { backgroundColor: '#F0F0F0', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 15, borderWidth: 1, borderColor: '#E0E0E0' },
-  smallPillText: { fontSize: 13, color: '#444', fontWeight: '500' },
+  smallPill: { backgroundColor: colors.surfaceInactive, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 15, borderWidth: 1, borderColor: colors.borderLight },
+  smallPillText: { fontSize: 13, color: colors.textBody, fontWeight: '500' },
 });

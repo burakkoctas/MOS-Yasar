@@ -3,11 +3,14 @@ import { AuthSession } from '@/src/features/auth/types';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import CustomFabIcon from '@/src/shared/components/ui/CustomFabIcon';
 import YasarBilgiLogo from '@/src/shared/components/ui/YasarBilgiLogo';
+import { AppColors } from '@/src/shared/theme/colors';
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { authStore } from '@/src/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
+import * as Notifications from 'expo-notifications';
 import { Stack, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   AppState,
@@ -25,6 +28,8 @@ import {
 } from 'react-native';
 
 export default function LoginScreen() {
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const DEV_USERNAME = 'ugurbozaci';
   const DEV_PASSWORD = 'Astron05';
@@ -175,6 +180,33 @@ export default function LoginScreen() {
     router.replace('/(tabs)');
   };
 
+  const handleTestNotification = async () => {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('İzin Gerekli', 'Bildirim izni verilmedi.');
+      return;
+    }
+
+    await Notifications.scheduleNotificationAsync({
+      content: { title: 'Test Bildirimi', body: 'İlk bildirim hemen geldi!' },
+      trigger: null,
+    });
+
+    await Notifications.scheduleNotificationAsync({
+      content: { title: 'Test Bildirimi', body: '5 saniye sonraki bildirim!' },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 5 },
+    });
+  };
+
   const handleSetPasswordPreview = () => {
     router.push({
       pathname: '/set-password',
@@ -211,7 +243,7 @@ export default function LoginScreen() {
             >
               {!isKeyboardVisible && (
                 <View style={styles.iconWrapper}>
-                  <CustomFabIcon size={55} color="#1976D2" />
+                  <CustomFabIcon size={55} color={colors.primary} />
                 </View>
               )}
               <Text style={[styles.appName, isKeyboardVisible && styles.appNameKeyboardVisible]}>
@@ -224,7 +256,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Kullanıcı Adı"
-                  placeholderTextColor="#A0A0A0"
+                  placeholderTextColor={colors.textDisabled}
                   value={username}
                   onChangeText={(value) => setUsername(sanitizeUsernameInput(value))}
                   autoCapitalize="none"
@@ -238,7 +270,7 @@ export default function LoginScreen() {
                   <TextInput
                     style={[styles.input, styles.passwordInput]}
                     placeholder="Şifre"
-                    placeholderTextColor="#A0A0A0"
+                    placeholderTextColor={colors.textDisabled}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!isPasswordVisible}
@@ -253,7 +285,7 @@ export default function LoginScreen() {
                     <Ionicons
                       name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
                       size={22}
-                      color="#8E8E93"
+                      color={colors.textSystemGray}
                     />
                   </Pressable>
                 </View>
@@ -273,7 +305,7 @@ export default function LoginScreen() {
                       !isRememberMeAvailable ? 'square' : rememberMe ? 'checkbox' : 'square-outline'
                     }
                     size={30}
-                    color={!isRememberMeAvailable ? '#D0D0D0' : rememberMe ? '#1976D2' : '#A0A0A0'}
+                    color={!isRememberMeAvailable ? colors.textDisabled : rememberMe ? colors.primary : colors.textDisabled}
                   />
                   <Text
                     style={[
@@ -290,8 +322,15 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity style={styles.loginButton} onPress={handleLogin} activeOpacity={0.8}>
-                <Text style={styles.loginButtonText}>Giriş</Text>
+              <TouchableOpacity
+                style={[
+                  styles.loginButton,
+                  isDark && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary },
+                ]}
+                onPress={handleLogin}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.loginButtonText, isDark && { color: colors.primary }]}>Giriş</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -304,6 +343,16 @@ export default function LoginScreen() {
             </View>
           </View>
         </KeyboardAvoidingView>
+
+        {__DEV__ && (
+          <TouchableOpacity
+            style={styles.notificationTestButton}
+            onPress={handleTestNotification}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.devLoginButtonText}>Bildirim Test</Text>
+          </TouchableOpacity>
+        )}
 
         {!isKeyboardVisible && (
           <View style={styles.footer}>
@@ -349,7 +398,7 @@ export default function LoginScreen() {
               <TextInput
                 style={styles.modalInput}
                 placeholder="ornek@yasarbilgi.com.tr"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={colors.textDisabled}
                 value={forgotEmail}
                 onChangeText={setForgotEmail}
                 keyboardType="email-address"
@@ -379,8 +428,8 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   keyboardContainer: { flex: 1 },
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 25 },
   logoContainer: { alignItems: 'center', marginBottom: 50 },
@@ -388,27 +437,27 @@ const styles = StyleSheet.create({
   iconWrapper: {
     width: 100,
     height: 100,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderWidth: 5,
-    borderColor: '#1976D2',
+    borderColor: colors.primary,
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
   },
-  appName: { fontSize: 28, fontWeight: 'bold', color: '#1976D2', letterSpacing: 0.5 },
+  appName: { fontSize: 28, fontWeight: 'bold', color: colors.primary, letterSpacing: 0.5 },
   appNameKeyboardVisible: { fontSize: 32 },
   formContainer: { width: '100%' },
   inputWrapper: { marginBottom: 15, justifyContent: 'center' },
   input: {
-    backgroundColor: '#FFF',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#EBEBEB',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 15,
-    color: '#333',
+    color: colors.textPrimary,
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -427,11 +476,11 @@ const styles = StyleSheet.create({
   },
   passwordToggleButton: {
     width: 44,
-    backgroundColor: '#FFF',
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderRightWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#EBEBEB',
+    borderColor: colors.border,
     borderTopRightRadius: 12,
     borderBottomRightRadius: 12,
     alignItems: 'center',
@@ -451,24 +500,24 @@ const styles = StyleSheet.create({
   },
   checkboxContainer: { flexDirection: 'row', alignItems: 'center' },
   checkboxContainerDisabled: { opacity: 0.7 },
-  rememberText: { marginLeft: 8, fontSize: 14, color: '#555', fontWeight: '500' },
-  rememberTextDisabled: { color: '#9E9E9E' },
-  forgotText: { fontSize: 14, color: '#1976D2', fontWeight: '600' },
+  rememberText: { marginLeft: 8, fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+  rememberTextDisabled: { color: colors.textDisabled },
+  forgotText: { fontSize: 14, color: colors.primary, fontWeight: '600' },
   loginButton: {
-    backgroundColor: '#1976D2',
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     borderRadius: 25,
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#1976D2',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 4,
   },
-  loginButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
+  loginButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
   signupContainer: { alignItems: 'center', paddingVertical: 10 },
-  signupText: { color: '#1976D2', fontSize: 16, fontWeight: 'bold' },
+  signupText: { color: colors.primary, fontSize: 16, fontWeight: 'bold' },
   footer: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 40 : 20,
@@ -479,44 +528,56 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  footerText: { fontSize: 12, color: '#A0A0A0' },
+  footerText: { fontSize: 12, color: colors.textDisabled },
+  notificationTestButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 40,
+    right: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: colors.primaryLighter,
+    borderWidth: 1,
+    borderColor: colors.primaryLighterBorder,
+    zIndex: 10,
+  },
   devLoginButton: {
     marginLeft: 12,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 12,
-    backgroundColor: '#EAF4FE',
+    backgroundColor: colors.primaryLighter,
     borderWidth: 1,
-    borderColor: '#C9E0F6',
+    borderColor: colors.primaryLighterBorder,
   },
   devLoginButtonText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#1976D2',
+    color: colors.primary,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalView: { width: '92%', backgroundColor: 'white', borderRadius: 25, padding: 25, elevation: 5 },
+  modalView: { width: '92%', backgroundColor: colors.surface, borderRadius: 25, padding: 25, elevation: 5 },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000080',
+    color: colors.textHeading,
     marginBottom: 20,
     textAlign: 'center',
   },
   modalInput: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceInput,
     borderWidth: 1,
-    borderColor: '#EBEBEB',
+    borderColor: colors.border,
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 15,
     fontSize: 15,
-    color: '#333',
+    color: colors.textPrimary,
     marginBottom: 25,
   },
   modalButtonContainer: {
@@ -524,10 +585,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     width: '100%',
     borderTopWidth: 0.5,
-    borderTopColor: '#E0E0E0',
+    borderTopColor: colors.borderLight,
     paddingTop: 15,
   },
   modalButton: { paddingHorizontal: 15, paddingVertical: 5 },
-  buttonTextDefault: { color: '#888', fontSize: 16, fontWeight: '500' },
-  buttonTextBold: { color: '#1976D2', fontSize: 16, fontWeight: 'bold' },
+  buttonTextDefault: { color: colors.textPlaceholder, fontSize: 16, fontWeight: '500' },
+  buttonTextBold: { color: colors.primary, fontSize: 16, fontWeight: 'bold' },
 });

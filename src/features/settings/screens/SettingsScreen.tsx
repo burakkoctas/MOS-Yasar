@@ -1,10 +1,13 @@
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import ConfirmModal from '@/src/shared/components/ui/ConfirmModal';
+import { AppColors } from '@/src/shared/theme/colors';
+import { useTheme } from '@/src/shared/theme/useTheme';
+import { ThemeMode } from '@/src/store/useThemeStore';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AnimatedItem = ({
@@ -25,13 +28,15 @@ const AnimatedItem = ({
   }, [delay, itemFade, itemSlide]);
 
   return (
-    <Animated.View style={{ opacity: itemFade, transform: [{ translateY: itemSlide }] }}>
+    <Animated.View renderToHardwareTextureAndroid style={{ opacity: itemFade, transform: [{ translateY: itemSlide }] }}>
       {children}
     </Animated.View>
   );
 };
 
 export default function SettingsScreen() {
+  const { colors, mode, setMode } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { session, clearSession } = useAuthStore();
   const displayName = session?.user.fullName?.trim() || 'Demo Kullanıcı';
@@ -46,6 +51,12 @@ export default function SettingsScreen() {
       setIsDataReady(true);
     }, []),
   );
+
+  const themeModes: { key: ThemeMode; label: string }[] = [
+    { key: 'light', label: 'Açık' },
+    { key: 'system', label: 'Sistem' },
+    { key: 'dark', label: 'Koyu' },
+  ];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -76,7 +87,7 @@ export default function SettingsScreen() {
                   onPress={() => router.push('/settings/active-delegates')}
                 >
                   <Text style={styles.menuText}>Aktif vekaletlerim</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#8E8E93" />
+                  <Ionicons name="chevron-forward" size={20} color={colors.textSystemGray} />
                 </Pressable>
 
                 <Pressable
@@ -84,8 +95,26 @@ export default function SettingsScreen() {
                   onPress={() => router.push('/settings/past-delegates')}
                 >
                   <Text style={styles.menuText}>Geçmiş vekaletlerim</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#8E8E93" />
+                  <Ionicons name="chevron-forward" size={20} color={colors.textSystemGray} />
                 </Pressable>
+              </View>
+            </AnimatedItem>
+
+            <AnimatedItem delay={350}>
+              <Text style={styles.sectionTitle}>Görünüm</Text>
+              <View style={styles.themeSegment}>
+                {themeModes.map(({ key, label }) => (
+                  <TouchableOpacity
+                    key={key}
+                    style={[styles.themeSegmentItem, mode === key && styles.themeSegmentItemActive]}
+                    onPress={() => setMode(key)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.themeSegmentText, mode === key && styles.themeSegmentTextActive]}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </AnimatedItem>
           </ScrollView>
@@ -124,32 +153,32 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
-  header: { paddingVertical: 15, alignItems: 'center', backgroundColor: '#FAFAFA' },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#1976D2' },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { paddingVertical: 15, alignItems: 'center', backgroundColor: colors.background },
+  headerTitle: { fontSize: 18, fontWeight: '600', color: colors.primary },
   content: { flex: 1, paddingHorizontal: 20 },
   sectionTitle: {
     fontSize: 14,
-    color: '#747474',
+    color: colors.textSecondary,
     marginTop: 25,
     marginBottom: 10,
     marginLeft: 5,
     fontWeight: 'bold',
   },
   profileCard: {
-    backgroundColor: '#cce5f3',
+    backgroundColor: colors.profileCard,
     borderRadius: 20,
     padding: 20,
     elevation: 2,
-    shadowColor: '#ffffff',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     borderWidth: 0,
   },
-  userName: { fontSize: 20, fontWeight: '500', color: '#333' },
-  companyName: { fontSize: 14, color: '#666', marginTop: 5, letterSpacing: 0.5 },
+  userName: { fontSize: 20, fontWeight: '500', color: colors.textPrimary },
+  companyName: { fontSize: 14, color: colors.textSecondary, marginTop: 5, letterSpacing: 0.5 },
   menuContainer: { gap: 12 },
   menuItem: {
     flexDirection: 'row',
@@ -157,19 +186,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 18,
     paddingHorizontal: 15,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: '#EBEBEB',
+    borderColor: colors.border,
     elevation: 1,
-    shadowColor: '#ffffff',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
   },
-  menuText: { fontSize: 16, color: '#333' },
-  footer: { alignItems: 'center', paddingBottom: 25, paddingTop: 15, backgroundColor: '#FAFAFA' },
-  versionText: { fontSize: 12, color: '#A0A0A0', marginBottom: 10 },
-  logoutButton: { backgroundColor: '#FEEBEE', paddingVertical: 12, paddingHorizontal: 80, borderRadius: 25 },
-  logoutText: { color: '#D32F2F', fontWeight: '600', fontSize: 15 },
+  menuText: { fontSize: 16, color: colors.textBody },
+  footer: { alignItems: 'center', paddingBottom: 25, paddingTop: 15, backgroundColor: colors.background },
+  versionText: { fontSize: 12, color: colors.textDisabled, marginBottom: 10 },
+  logoutButton: { backgroundColor: colors.dangerBg, paddingVertical: 12, paddingHorizontal: 80, borderRadius: 25 },
+  logoutText: { color: colors.dangerText, fontWeight: '600', fontSize: 15 },
+  themeSegment: {
+    flexDirection: 'row',
+    backgroundColor: colors.surfaceInactive,
+    borderRadius: 12,
+    padding: 4,
+  },
+  themeSegmentItem: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  themeSegmentItemActive: {
+    backgroundColor: colors.surface,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  themeSegmentText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+  themeSegmentTextActive: { color: colors.primary, fontWeight: '700' },
 });

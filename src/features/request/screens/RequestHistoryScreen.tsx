@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -25,6 +26,7 @@ function getDefaultDateRange() {
 }
 
 export default function RequestHistoryScreen() {
+  const { colors } = useTheme();
   const router = useRouter();
   const [allHistory, setAllHistory] = useState<CategoryGroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -72,7 +74,7 @@ export default function RequestHistoryScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
       {isContentReady && (
         <>
           <EntranceTransition delay={100}>
@@ -94,8 +96,8 @@ export default function RequestHistoryScreen() {
 
           <EntranceTransition delay={220}>
             <View style={styles.headerContainer}>
-              <Text style={styles.title}>Geçmiş Talepler</Text>
-              <Text style={styles.subTitle}>{dateRangeText}</Text>
+              <Text style={[styles.title, { color: colors.primary }]}>Geçmiş Talepler</Text>
+              <Text style={[styles.subTitle, { color: colors.textPlaceholder }]}>{dateRangeText}</Text>
             </View>
           </EntranceTransition>
 
@@ -142,7 +144,6 @@ export default function RequestHistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     paddingHorizontal: 15,
     paddingTop: 10,
   },
@@ -154,12 +155,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#1976D2',
     letterSpacing: 1,
   },
   subTitle: {
     fontSize: 14,
-    color: '#888',
     marginTop: 4,
   },
   listWrapper: { flex: 1 },

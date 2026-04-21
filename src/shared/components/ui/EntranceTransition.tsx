@@ -34,6 +34,7 @@ export default function EntranceTransition({
 
   return (
     <Animated.View
+      renderToHardwareTextureAndroid
       style={[
         style,
         {

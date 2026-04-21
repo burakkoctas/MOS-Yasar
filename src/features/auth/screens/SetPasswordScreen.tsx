@@ -2,8 +2,10 @@ import { authService } from '@/src/features/auth/services/authService';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import CustomFabIcon from '@/src/shared/components/ui/CustomFabIcon';
 import YasarBilgiLogo from '@/src/shared/components/ui/YasarBilgiLogo';
+import { AppColors } from '@/src/shared/theme/colors';
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Keyboard,
@@ -18,6 +20,8 @@ import {
 } from 'react-native';
 
 export default function SetPasswordScreen() {
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { email } = useLocalSearchParams<{ email?: string }>();
   const [password, setPassword] = useState('');
@@ -93,7 +97,7 @@ export default function SetPasswordScreen() {
             <View style={[styles.logoContainer, isKeyboardVisible && styles.logoContainerKeyboardVisible]}>
               {!isKeyboardVisible && (
                 <View style={styles.iconWrapper}>
-                  <CustomFabIcon size={55} color="#1976D2" />
+                  <CustomFabIcon size={55} color={colors.primary} />
                 </View>
               )}
               <Text style={styles.appName}>Dijital.Onay</Text>
@@ -104,7 +108,7 @@ export default function SetPasswordScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Yeni Şifre"
-                  placeholderTextColor="#A0A0A0"
+                  placeholderTextColor={colors.textDisabled}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={true}
@@ -115,7 +119,7 @@ export default function SetPasswordScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Yeni Şifre Tekrar"
-                  placeholderTextColor="#A0A0A0"
+                  placeholderTextColor={colors.textDisabled}
                   value={passwordRepeat}
                   onChangeText={setPasswordRepeat}
                   secureTextEntry={true}
@@ -124,8 +128,15 @@ export default function SetPasswordScreen() {
                 />
               </View>
 
-              <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} activeOpacity={0.8}>
-                <Text style={styles.submitButtonText}>Şifreyi Güncelle</Text>
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  isDark && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary },
+                ]}
+                onPress={handleSubmit}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.submitButtonText, isDark && { color: colors.primary }]}>Şifreyi Güncelle</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -143,15 +154,15 @@ export default function SetPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   keyboardContainer: { flex: 1 },
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 25 },
   titleText: {
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '700',
-    color: '#1976D2',
+    color: colors.primary,
     marginBottom: 28,
   },
   logoContainer: { alignItems: 'center', marginBottom: 40 },
@@ -159,9 +170,9 @@ const styles = StyleSheet.create({
   iconWrapper: {
     width: 100,
     height: 100,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderWidth: 3,
-    borderColor: '#1976D2',
+    borderColor: colors.primary,
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
@@ -170,20 +181,20 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1976D2',
+    color: colors.primary,
     letterSpacing: 0.5,
   },
   formContainer: { width: '100%' },
   inputWrapper: { marginBottom: 20 },
   input: {
-    backgroundColor: '#FFF',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#EBEBEB',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 15,
-    color: '#333',
+    color: colors.textPrimary,
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -191,19 +202,19 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   submitButton: {
-    backgroundColor: '#1976D2',
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     borderRadius: 25,
     alignItems: 'center',
     marginTop: 20,
-    shadowColor: '#1976D2',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 4,
   },
   submitButtonText: {
-    color: '#FFF',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 1,

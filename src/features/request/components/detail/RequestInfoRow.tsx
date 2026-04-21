@@ -1,4 +1,6 @@
-import React from 'react';
+import { AppColors } from '@/src/shared/theme/colors';
+import { useTheme } from '@/src/shared/theme/useTheme';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 interface RequestInfoRowProps {
@@ -7,6 +9,8 @@ interface RequestInfoRowProps {
 }
 
 export default function RequestInfoRow({ label, value }: RequestInfoRowProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const isEmailValue = value.includes('@');
 
   return (
@@ -20,27 +24,27 @@ export default function RequestInfoRow({ label, value }: RequestInfoRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingVertical: 6,
     borderBottomWidth: 0.5,
-    borderBottomColor: '#F5F5F5',
+    borderBottomColor: colors.infoRowBorder,
   },
   infoLabel: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textMuted,
     flexShrink: 0,
     marginRight: 4,
   },
   infoLabelStrong: {
     fontWeight: '700',
-    color: '#555',
+    color: colors.textSecondary,
   },
   infoValue: {
     fontSize: 14,
-    color: '#333',
+    color: colors.textPrimary,
     flex: 1,
     minWidth: 0,
     textAlign: 'right',

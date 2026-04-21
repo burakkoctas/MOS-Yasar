@@ -1,7 +1,9 @@
 import ConfirmModal from '@/src/shared/components/ui/ConfirmModal';
+import { AppColors } from '@/src/shared/theme/colors';
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, FlatList, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useDelegate } from '../context/DelegateContext';
 
@@ -38,6 +40,8 @@ const AnimatedPill = ({
 };
 
 export default function TitleSelectionScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { selectedTitles, setSelectedTitles } = useDelegate();
   const [isWarningVisible, setIsWarningVisible] = useState(false);
@@ -76,12 +80,12 @@ export default function TitleSelectionScreen() {
           headerShown: true,
           headerTitle: 'Başlık Seç',
           headerTitleAlign: 'center',
-          headerTitleStyle: { color: '#1976D2', fontWeight: 'normal', fontSize: 18 },
-          headerStyle: { backgroundColor: '#FAFAFA' },
+          headerTitleStyle: { color: colors.primary, fontWeight: 'normal', fontSize: 18 },
+          headerStyle: { backgroundColor: colors.background },
           headerShadowVisible: false,
           headerLeft: () => (
             <Pressable onPress={handleBackPress} style={{ marginLeft: 5 }}>
-              <Ionicons name="arrow-back" size={28} color="#1976D2" />
+              <Ionicons name="arrow-back" size={28} color={colors.primary} />
             </Pressable>
           ),
           headerRight: () => (
@@ -116,7 +120,7 @@ export default function TitleSelectionScreen() {
 
                 <View style={styles.iconPlaceholder}>
                   {isSelected && (
-                    <Ionicons name="checkmark-circle" size={26} color="#1976D2" />
+                    <Ionicons name="checkmark-circle" size={26} color={colors.primary} />
                   )}
                 </View>
               </TouchableOpacity>
@@ -142,13 +146,13 @@ export default function TitleSelectionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   iconPlaceholder: { width: 26, height: 26, justifyContent: 'center', alignItems: 'center' },
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
+  container: { flex: 1, backgroundColor: colors.background },
   listContent: { padding: 20, paddingBottom: 40 },
-  doneButtonText: { color: '#1976D2', fontWeight: 'normal', fontSize: 16 },
-  pillContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#ffffff', paddingVertical: 16, paddingHorizontal: 20, borderRadius: 30, marginBottom: 12, borderWidth: 1.5, borderColor: '#EBEBEB', elevation: 2, shadowColor: '#fff', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
-  pillContainerSelected: { backgroundColor: '#E3F2FD', borderColor: '#BBDEFB' },
-  pillText: { fontSize: 16, color: '#444', fontWeight: '400' },
-  pillTextSelected: { color: '#1976D2', fontWeight: '400', fontSize: 16 },
+  doneButtonText: { color: colors.primary, fontWeight: 'normal', fontSize: 16 },
+  pillContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.surface, paddingVertical: 16, paddingHorizontal: 20, borderRadius: 30, marginBottom: 12, borderWidth: 1.5, borderColor: colors.border, elevation: 2, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
+  pillContainerSelected: { backgroundColor: colors.primaryLight, borderColor: colors.primaryLightBorder },
+  pillText: { fontSize: 16, color: colors.textBody, fontWeight: '400' },
+  pillTextSelected: { color: colors.primary, fontWeight: '400', fontSize: 16 },
 });

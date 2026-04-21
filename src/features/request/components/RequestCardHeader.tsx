@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/shared/theme/useTheme';
 import ExpoCheckbox from 'expo-checkbox';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -20,6 +21,7 @@ const RequestCardHeader: React.FC<HeaderProps> = ({
   onSelect,
   showCheckbox = true,
 }) => {
+  const { colors } = useTheme();
   return (
     <View style={styles.headerContainer}>
       <View style={styles.badgeWrapper}>
@@ -43,7 +45,7 @@ const RequestCardHeader: React.FC<HeaderProps> = ({
           <View pointerEvents="none">
             <ExpoCheckbox
               value={isSelected}
-              color={isSelected ? '#1976D2' : undefined}
+              color={isSelected ? colors.primary : undefined}
               style={styles.checkbox}
             />
           </View>

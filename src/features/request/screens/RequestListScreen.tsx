@@ -3,6 +3,7 @@ import RadioDateModal from '@/src/features/request/components/RadioDateModal';
 import ActionDrawer from '@/src/shared/components/ui/ActionDrawer';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import EntranceTransition from '@/src/shared/components/ui/EntranceTransition';
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -13,6 +14,7 @@ import { requestService } from '../services/requestService';
 import { CategoryGroup, RequestOperation } from '../types';
 
 export default function RequestListScreen() {
+  const { colors } = useTheme();
   const router = useRouter();
   const { session } = useAuthStore();
   const [allRequests, setAllRequests] = useState<CategoryGroup[]>([]);
@@ -66,6 +68,9 @@ export default function RequestListScreen() {
       const data = await requestService.getRequests();
       setAllRequests(data);
       setIsContentReady(true);
+    } catch (error) {
+      console.error('[request-list] talepler yuklenemedi', error);
+      setIsContentReady(true);
     } finally {
       setIsLoading(false);
     }
@@ -93,7 +98,7 @@ export default function RequestListScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
       {isContentReady && (
         <>
           <EntranceTransition delay={100}>
@@ -107,7 +112,7 @@ export default function RequestListScreen() {
 
           <EntranceTransition delay={220}>
             <View style={styles.headerContainer}>
-              <Text style={styles.title}>Talep Listesi</Text>
+              <Text style={[styles.title, { color: colors.primary }]}>Talep Listesi</Text>
               <View style={styles.spacingPlaceholder} />
             </View>
           </EntranceTransition>
@@ -179,9 +184,9 @@ export default function RequestListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 15, paddingTop: 10 },
+  container: { flex: 1, paddingHorizontal: 15, paddingTop: 10 },
   headerContainer: { alignItems: 'center', marginTop: 15, marginBottom: 15 },
-  title: { fontSize: 18, fontWeight: '500', color: '#1976D2', letterSpacing: 1 },
+  title: { fontSize: 18, fontWeight: '500', letterSpacing: 1 },
   spacingPlaceholder: { height: 23 },
   listWrapper: { flex: 1 },
 });

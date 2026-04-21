@@ -1,7 +1,11 @@
-import { appConfig, isRemoteAuthEnabled } from '@/src/config/appConfig';
+import {
+  API_BASE_URL,
+  APP_VERSION_BY_PLATFORM,
+  KEYCLOAK_BASE_URL,
+  isRemoteAuthEnabled,
+} from '@/src/config/appConfig';
 import {
   AuthUserDto,
-  LoginErrorResponseDto,
   LoginRequestDto,
   LoginResponseDto,
   PasswordResetRequestDto,
@@ -18,18 +22,11 @@ import {
   RegisterPayload,
   SetPasswordPayload,
 } from '@/src/features/auth/types';
-import { createApiClient } from '@/src/shared/api/apiClient';
+import { ApiError, FetchApiClient } from '@/src/shared/api/apiClient';
 import { Platform } from 'react-native';
 
-const AUTH_TOKEN_URL =
-  'https://oauthtest.yasar.com.tr/auth/realms/Mobil.Onay/protocol/openid-connect/token';
-const VERSION_CHECK_URL = 'https://mos-tst.yasar.com.tr/mos/api/v3/check';
-const REGISTER_URL = 'https://mos-tst.yasar.com.tr/mos/api/v3/register';
-const SET_PASSWORD_URL = 'https://mos-tst.yasar.com.tr/mos/api/v3/set-password';
-const APP_VERSION_BY_PLATFORM = {
-  ios: '2.4.4',
-  android: '2.4.1',
-} as const;
+const keycloakApiClient = new FetchApiClient(KEYCLOAK_BASE_URL);
+const mosApiClient = new FetchApiClient(API_BASE_URL);
 
 const MOCK_USER: AuthUserDto = {
   id: 'user-1',
@@ -49,14 +46,6 @@ interface JwtPayload {
   realm_access?: {
     roles?: string[];
   };
-}
-
-interface DebugOnlyResponse {
-  code: number;
-  message: string | null;
-  data: null;
-  dataList: null;
-  title: string | null;
 }
 
 function wait() {
@@ -165,50 +154,25 @@ function mapLoginResponseToSession(response: LoginResponseDto): AuthSession {
     accessToken: response.access_token,
     refreshToken: response.refresh_token,
     user,
-    mode: isRemoteAuthEnabled() ? 'remote' : 'mock',
+    mode: 'remote',
   };
 }
 
-function isDebugOnlyResponse(value: unknown): value is DebugOnlyResponse {
-  return Boolean(
-    value &&
-      typeof value === 'object' &&
-      'code' in value &&
-      'message' in value &&
-      (value as DebugOnlyResponse).code === 202,
-  );
-}
-
-function ensureNotDebugOnlyResponse(value: unknown, operation: string) {
-  if (isDebugOnlyResponse(value)) {
-    throw new Error(
-      `${operation} istegi webhook'a yonlendirildi. Debug modunda gercek backend cevabi olmadigi icin islem tamamlanamaz.`,
-    );
-  }
-}
-
-const apiClient = createApiClient(appConfig.api.baseUrl);
-
-async function runVersionCheck(accessToken: string) {
+async function runVersionCheck() {
   const platform = Platform.OS === 'ios' ? 'ios' : 'android';
   const query = new URLSearchParams({
     platform,
     version: APP_VERSION_BY_PLATFORM[platform],
   }).toString();
 
-  const versionResponse = await apiClient.request<VersionCheckResponseDto | DebugOnlyResponse>(
-    `${VERSION_CHECK_URL}?${query}`,
+  const versionResponse = await mosApiClient.request<VersionCheckResponseDto>(
+    `/mos/api/v3/check?${query}`,
     {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
     },
   );
 
-  ensureNotDebugOnlyResponse(versionResponse, 'Versiyon kontrol');
-
-  console.log('[auth] version check response body', versionResponse);
+  console.log('[auth] version check response', versionResponse);
 
   if (versionResponse.code !== 200) {
     throw new Error(
@@ -273,13 +237,11 @@ const mockAuthService: AuthService = {
 const remoteAuthService: AuthService = {
   async login(payload: LoginPayload): Promise<AuthSession> {
     const dto = mapLoginPayloadToDto(payload);
-    console.log('[auth] remote login basladi', {
-      mode: appConfig.auth.mode,
-      username: dto.username,
-      endpoint: AUTH_TOKEN_URL,
-    });
+    console.log('[auth] remote login basladi', { username: dto.username });
     ensureUsername(dto.username);
     ensurePassword(dto.password);
+
+    await runVersionCheck();
 
     const formBody = new URLSearchParams({
       grant_type: 'password',
@@ -288,36 +250,27 @@ const remoteAuthService: AuthService = {
       client_id: 'mobile-api',
     }).toString();
 
-    const tokenResponse = await apiClient.request<
-      LoginResponseDto | LoginErrorResponseDto | DebugOnlyResponse
-    >(AUTH_TOKEN_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: formBody,
-    });
+    let tokenResponse: LoginResponseDto;
 
-    ensureNotDebugOnlyResponse(tokenResponse, 'Giris');
-
-    console.log('[auth] login success response body', tokenResponse);
-
-    if (!('access_token' in tokenResponse) || !tokenResponse.access_token) {
-      let errorMessage = 'Giris islemi basarisiz oldu.';
-
-      if (
-        tokenResponse.error === 'invalid_grant' &&
-        tokenResponse.error_description === 'Invalid user credentials'
-      ) {
-        errorMessage = 'Kullanici adi veya sifre hatali.';
-      } else if (tokenResponse.error_description) {
-        errorMessage = tokenResponse.error_description;
+    try {
+      tokenResponse = await keycloakApiClient.request<LoginResponseDto>(
+        '/auth/realms/Mobil.Onay/protocol/openid-connect/token',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: formBody,
+        },
+      );
+    } catch (error) {
+      if (error instanceof ApiError && error.code === 'invalid_grant') {
+        throw new Error('Kullanici adi veya sifre hatali.');
       }
-
-      throw new Error(errorMessage);
+      throw error;
     }
 
-    await runVersionCheck(tokenResponse.access_token);
+    console.log('[auth] login success');
 
     return mapLoginResponseToSession(tokenResponse);
   },
@@ -331,15 +284,13 @@ const remoteAuthService: AuthService = {
 
     ensureEmail(dto.email);
 
-    const registerResponse = await apiClient.request<RegisterResponseDto | DebugOnlyResponse>(
-      REGISTER_URL,
+    const registerResponse = await mosApiClient.request<RegisterResponseDto>(
+      '/mos/api/v3/register',
       {
         method: 'POST',
         body: dto,
       },
     );
-
-    ensureNotDebugOnlyResponse(registerResponse, 'Kayit');
 
     if (registerResponse.code !== 200) {
       throw new Error(registerResponse.message || 'Kayit islemi tamamlanamadi.');
@@ -353,15 +304,13 @@ const remoteAuthService: AuthService = {
     ensureEmail(dto.email);
     ensurePassword(dto.newPassword);
 
-    const setPasswordResponse = await apiClient.request<SetPasswordResponseDto | DebugOnlyResponse>(
-      SET_PASSWORD_URL,
+    const setPasswordResponse = await mosApiClient.request<SetPasswordResponseDto>(
+      '/mos/api/v3/set-password',
       {
         method: 'POST',
         body: dto,
       },
     );
-
-    ensureNotDebugOnlyResponse(setPasswordResponse, 'Sifre guncelleme');
 
     if (setPasswordResponse.code !== 200) {
       throw new Error(setPasswordResponse.message || 'Sifre guncelleme islemi tamamlanamadi.');
@@ -371,40 +320,32 @@ const remoteAuthService: AuthService = {
   },
 
   async requestPasswordReset(payload: PasswordResetPayload): Promise<void> {
-    const response = await apiClient.request<DebugOnlyResponse | { message?: string }>(
-      '/forgot-password',
-      {
-        method: 'POST',
-        body: mapPasswordResetPayloadToDto(payload),
-      },
-    );
-
-    ensureNotDebugOnlyResponse(response, 'Sifre sifirlama');
+    await mosApiClient.request('/mos/api/v3/forgot-password', {
+      method: 'POST',
+      body: mapPasswordResetPayloadToDto(payload),
+    });
   },
 };
 
 export const authService: AuthService = {
   async login(payload: LoginPayload) {
-    console.log('[auth] aktif modlar', {
-      authMode: appConfig.auth.mode,
-      apiMode: appConfig.api.mode,
-    });
+    console.log('[auth] aktif mod', { authMode: isRemoteAuthEnabled() ? 'remote' : 'mock' });
     return isRemoteAuthEnabled()
       ? remoteAuthService.login(payload)
       : mockAuthService.login(payload);
   },
   async register(payload: RegisterPayload) {
-    return appConfig.api.mode === 'remote'
+    return isRemoteAuthEnabled()
       ? remoteAuthService.register(payload)
       : mockAuthService.register(payload);
   },
   async setPassword(payload: SetPasswordPayload) {
-    return appConfig.api.mode === 'remote'
+    return isRemoteAuthEnabled()
       ? remoteAuthService.setPassword(payload)
       : mockAuthService.setPassword(payload);
   },
   async requestPasswordReset(payload: PasswordResetPayload) {
-    return appConfig.api.mode === 'remote'
+    return isRemoteAuthEnabled()
       ? remoteAuthService.requestPasswordReset(payload)
       : mockAuthService.requestPasswordReset(payload);
   },

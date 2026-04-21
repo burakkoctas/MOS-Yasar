@@ -1,3 +1,5 @@
+import { AppColors } from '@/src/shared/theme/colors';
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -106,6 +108,8 @@ export default function DateRangePickerModal({
   onClose,
   onSave,
 }: DateRangePickerModalProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
   const [startInput, setStartInput] = useState('');
@@ -172,11 +176,11 @@ export default function DateRangePickerModal({
     const marked: Record<string, MarkedDateType> = {};
 
     if (startDate) {
-      marked[startDate] = { startingDay: true, color: '#1976D2', textColor: 'white' };
+      marked[startDate] = { startingDay: true, color: colors.primary, textColor: '#FFFFFF' };
     }
 
     if (startDate && endDate) {
-      marked[endDate] = { endingDay: true, color: '#1976D2', textColor: 'white' };
+      marked[endDate] = { endingDay: true, color: colors.primary, textColor: '#FFFFFF' };
 
       const current = new Date(startDate);
       const end = new Date(endDate);
@@ -184,7 +188,7 @@ export default function DateRangePickerModal({
 
       while (current < end) {
         const dateStr = toCalendarDate(current);
-        marked[dateStr] = { color: '#E3F2FD', textColor: '#1976D2' };
+        marked[dateStr] = { color: colors.primaryLighter, textColor: colors.primary };
         current.setDate(current.getDate() + 1);
       }
     }
@@ -299,7 +303,7 @@ export default function DateRangePickerModal({
       <SafeAreaView style={styles.modalContainer}>
         <View style={styles.headerBar}>
           <Pressable onPress={onClose} style={styles.iconButton}>
-            <Ionicons name="close" size={26} color="#333" />
+            <Ionicons name="close" size={26} color={colors.textPrimary} />
           </Pressable>
 
           <Text style={styles.headerTitle}>Tarih Aralığı</Text>
@@ -312,7 +316,7 @@ export default function DateRangePickerModal({
             <Ionicons
               name="checkmark-circle"
               size={28}
-              color={startDate && endDate ? '#1976D2' : '#CCC'}
+              color={startDate && endDate ? colors.primary : colors.borderLight}
             />
           </Pressable>
         </View>
@@ -323,13 +327,13 @@ export default function DateRangePickerModal({
             onChangeText={(value) => handleInputChange('start', value)}
             keyboardType="number-pad"
             placeholder="Başlangıç"
-            placeholderTextColor="#8FA7C2"
+            placeholderTextColor={colors.textCalendarPlaceholder}
             style={styles.dateInput}
             maxLength={10}
           />
 
           <View style={styles.arrowWrapper}>
-            <Ionicons name="arrow-forward" size={18} color="#6B7A90" />
+            <Ionicons name="arrow-forward" size={18} color={colors.textCalendarArrow} />
           </View>
 
           <TextInput
@@ -337,7 +341,7 @@ export default function DateRangePickerModal({
             onChangeText={(value) => handleInputChange('end', value)}
             keyboardType="number-pad"
             placeholder="Bitiş"
-            placeholderTextColor="#8FA7C2"
+            placeholderTextColor={colors.textCalendarPlaceholder}
             style={styles.dateInput}
             maxLength={10}
           />
@@ -358,7 +362,7 @@ export default function DateRangePickerModal({
         <View style={styles.calendarWrapper}>
           <View style={styles.calendarHeader}>
             <Pressable onPress={handlePrevious} style={styles.headerControl}>
-              <Ionicons name="chevron-back" size={22} color="#1976D2" />
+              <Ionicons name="chevron-back" size={22} color={colors.primary} />
             </Pressable>
 
             <View style={styles.titleGroup}>
@@ -372,7 +376,7 @@ export default function DateRangePickerModal({
             </View>
 
             <Pressable onPress={handleNext} style={styles.headerControl}>
-              <Ionicons name="chevron-forward" size={22} color="#1976D2" />
+              <Ionicons name="chevron-forward" size={22} color={colors.primary} />
             </Pressable>
           </View>
 
@@ -385,12 +389,14 @@ export default function DateRangePickerModal({
               onDayPress={onDayPress}
               markedDates={getMarkedDates()}
               theme={{
-                todayTextColor: '#1976D2',
+                todayTextColor: colors.primary,
                 textDayFontSize: 15,
                 textMonthFontWeight: 'bold',
-                monthTextColor: '#333',
+                monthTextColor: colors.textPrimary,
                 textDayHeaderFontWeight: '600',
                 calendarBackground: 'transparent',
+                dayTextColor: colors.textPrimary,
+                textDisabledColor: colors.textDisabled,
               }}
             />
           )}
@@ -448,10 +454,10 @@ export default function DateRangePickerModal({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppColors) => StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceCalendar,
   },
   headerBar: {
     flexDirection: 'row',
@@ -459,14 +465,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 15,
     paddingVertical: 15,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#EBEBEB',
+    borderBottomColor: colors.borderCalendar,
   },
   headerTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#333',
+    color: colors.textPrimary,
   },
   iconButton: {
     padding: 5,
@@ -483,11 +489,11 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#D9E2EC',
+    borderColor: colors.borderDate,
     paddingHorizontal: 14,
-    color: '#1976D2',
+    color: colors.primary,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -507,12 +513,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 999,
-    backgroundColor: '#EAF4FE',
+    backgroundColor: colors.primaryLighter,
     borderWidth: 1,
-    borderColor: '#CFE4FB',
+    borderColor: colors.primaryLighterBorder,
   },
   quickRangeChipText: {
-    color: '#1976D2',
+    color: colors.primary,
     fontWeight: '600',
     fontSize: 13,
   },
@@ -520,11 +526,11 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 20,
     marginBottom: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#EBEEF2',
+    borderColor: colors.borderCalendar,
   },
   calendarHeader: {
     flexDirection: 'row',
@@ -538,7 +544,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F1F6FB',
+    backgroundColor: colors.primaryLighter,
   },
   titleGroup: {
     flexDirection: 'row',
@@ -550,10 +556,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: '#F1F6FB',
+    backgroundColor: colors.primaryLighter,
   },
   titleButtonText: {
-    color: '#1976D2',
+    color: colors.primary,
     fontWeight: '700',
     fontSize: 14,
   },
@@ -567,22 +573,22 @@ const styles = StyleSheet.create({
     width: '31%',
     minHeight: 52,
     borderRadius: 14,
-    backgroundColor: '#F6F8FB',
+    backgroundColor: colors.surfaceChip,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.borderChip,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
   },
   selectionChipActive: {
-    backgroundColor: '#E3F2FD',
-    borderColor: '#1976D2',
+    backgroundColor: colors.primaryLighter,
+    borderColor: colors.primary,
   },
   selectionChipText: {
-    color: '#4A5A6A',
+    color: colors.textBody,
     fontWeight: '600',
   },
   selectionChipTextActive: {
-    color: '#1976D2',
+    color: colors.primary,
   },
 });

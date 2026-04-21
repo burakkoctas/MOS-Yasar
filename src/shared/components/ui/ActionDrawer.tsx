@@ -1,4 +1,6 @@
 import { RequestOperation } from '@/src/features/request/types';
+import { useTheme } from '@/src/shared/theme/useTheme';
+
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -16,6 +18,7 @@ export default function ActionDrawer({
   operations = [],
   onActionComplete,
 }: ActionDrawerProps) {
+  const { colors, isDark } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const insets = useSafeAreaInsets();
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
@@ -159,7 +162,7 @@ export default function ActionDrawer({
       <View
         style={[
           styles.overlay,
-          { backgroundColor: isOpen ? 'rgba(0,0,0,0.4)' : 'transparent' },
+          { backgroundColor: isOpen ? colors.overlayLight : 'transparent' },
         ]}
         pointerEvents={isOpen ? 'auto' : 'none'}
       >
@@ -172,6 +175,7 @@ export default function ActionDrawer({
           {
             height: layout.drawerHeight,
             paddingBottom: layout.drawerBottomPadding,
+            backgroundColor: colors.surface,
             transform: [{ translateY: drawerTranslateY }],
           },
         ]}
@@ -182,16 +186,26 @@ export default function ActionDrawer({
               key={`${operation.statusCode}-${operation.operationName}`}
               style={[
                 styles.actionButton,
-                { backgroundColor: operation.backgroundColor || '#F4F4F4' },
+                {
+                  backgroundColor: operation.backgroundColor
+                    ? isDark ? 'transparent' : operation.backgroundColor
+                    : colors.surfaceInactive,
+                  borderWidth: isDark && operation.backgroundColor ? 1.5 : 0,
+                  borderColor: isDark ? (operation.textColor || colors.textPrimary) : 'transparent',
+                },
               ]}
               onPress={() => handleOperationPress(operation)}
             >
               <Ionicons
-                name={operation.statusCode === 2 || operation.statusCode === 5 ? 'close-circle' : 'checkmark-circle'}
+                name={
+                  operation.statusCode === 2 || operation.statusCode === 5
+                    ? isDark ? 'close-circle-outline' : 'close-circle'
+                    : isDark ? 'checkmark-circle-outline' : 'checkmark-circle'
+                }
                 size={24}
-                color={operation.textColor || '#333'}
+                color={operation.textColor || colors.textPrimary}
               />
-              <Text style={[styles.buttonText, { color: operation.textColor || '#333' }]}>
+              <Text style={[styles.buttonText, { color: operation.textColor || colors.textPrimary }]}>
                 {selectedIds.length > 1
                   ? `${operation.operationName} (${selectedIds.length})`
                   : operation.operationName}
@@ -230,6 +244,8 @@ export default function ActionDrawer({
               styles.fabInner,
               {
                 borderRadius: layout.fabSize / 2,
+                backgroundColor: colors.surface,
+                borderColor: colors.primary,
               },
             ]}
             onPress={toggleDrawer}
@@ -249,7 +265,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#fff',
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     padding: 20,
@@ -275,9 +290,7 @@ const styles = StyleSheet.create({
   fabContainer: {},
   fabInner: {
     flex: 1,
-    backgroundColor: '#fff',
     borderWidth: 3,
-    borderColor: '#1976D2',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,

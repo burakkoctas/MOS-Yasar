@@ -1,4 +1,5 @@
 import AppLoader from '@/src/shared/components/ui/AppLoader';
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -8,6 +9,7 @@ import { delegateService } from '../services/delegateService';
 import { Delegate } from '../types';
 
 export default function PastDelegateScreen() {
+  const { colors } = useTheme();
   const router = useRouter();
   const [pastDelegates, setPastDelegates] = useState<Delegate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,21 +31,21 @@ export default function PastDelegateScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen
         options={{
           headerShown: true,
           title: 'Geçmiş Vekaletlerim',
           headerTitleAlign: 'center',
-          headerTitleStyle: { color: '#1976D2', fontWeight: 'normal', fontSize: 18 },
-          headerTintColor: '#1976D2',
-          headerStyle: { backgroundColor: '#FAFAFA' },
+          headerTitleStyle: { color: colors.primary, fontWeight: 'normal', fontSize: 18 },
+          headerTintColor: colors.primary,
+          headerStyle: { backgroundColor: colors.background },
           headerLeft: () => (
             <Pressable
               onPress={() => router.back()}
               style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, marginLeft: 5 })}
             >
-              <Ionicons name="arrow-back" size={28} color="#1976D2" />
+              <Ionicons name="arrow-back" size={28} color={colors.primary} />
             </Pressable>
           ),
         }}
@@ -59,7 +61,7 @@ export default function PastDelegateScreen() {
         />
       ) : (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Geçmiş vekalet kaydı bulunmamaktadır.</Text>
+          <Text style={[styles.emptyText, { color: colors.textSystemGray }]}>Geçmiş vekalet kaydı bulunmamaktadır.</Text>
         </View>
       )}
 
@@ -69,8 +71,8 @@ export default function PastDelegateScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
+  container: { flex: 1 },
   listContent: { padding: 15, paddingBottom: 40 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  emptyText: { fontSize: 16, color: '#8E8E93', textAlign: 'center' },
+  emptyText: { fontSize: 16, textAlign: 'center' },
 });

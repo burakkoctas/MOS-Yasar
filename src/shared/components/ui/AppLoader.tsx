@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/shared/theme/useTheme';
 import React, { useEffect } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import LoadingArrow from './LoadingArrow';
@@ -7,6 +8,8 @@ interface AppLoaderProps {
 }
 
 export default function AppLoader({ visible }: AppLoaderProps) {
+  const { colors } = useTheme();
+
   useEffect(() => {
     console.log('[loader] visibility changed', { visible });
   }, [visible]);
@@ -21,8 +24,8 @@ export default function AppLoader({ visible }: AppLoaderProps) {
       presentationStyle="overFullScreen"
       hardwareAccelerated={true}
     >
-      <View style={styles.overlay}>
-        <View style={styles.loaderCircle}>
+      <View style={[styles.overlay, { backgroundColor: colors.overlayLoader }]}>
+        <View style={[styles.loaderCircle, { backgroundColor: colors.surface, borderColor: colors.primary }]}>
           <LoadingArrow size={36} />
         </View>
       </View>
@@ -33,7 +36,6 @@ export default function AppLoader({ visible }: AppLoaderProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
@@ -42,10 +44,8 @@ const styles = StyleSheet.create({
   loaderCircle: {
     width: 70,
     height: 70,
-    backgroundColor: '#fff',
     borderRadius: 35,
     borderWidth: 3,
-    borderColor: '#1976D2',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

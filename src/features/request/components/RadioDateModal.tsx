@@ -1,5 +1,6 @@
-// Path: src/features/request/components/RadioDateModal.tsx
-import React, { useEffect, useState } from 'react';
+import { AppColors } from '@/src/shared/theme/colors';
+import { useTheme } from '@/src/shared/theme/useTheme';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface RadioDateModalProps {
@@ -10,11 +11,11 @@ interface RadioDateModalProps {
   onApply: (selected: string) => void;
 }
 
-export default function RadioDateModal({ 
-  visible, currentSelection, availableDates = [], onClose, onApply 
+export default function RadioDateModal({
+  visible, currentSelection, availableDates = [], onClose, onApply
 }: RadioDateModalProps) {
-  
-  // Modal içi geçici seçim (Tamam'a basana kadar asıl veriyi bozmaz)
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [tempSelected, setTempSelected] = useState(currentSelection);
 
   // Modal her açıldığında mevcut aramayı içeri al
@@ -69,19 +70,19 @@ export default function RadioDateModal({
   );
 }
 
-const styles = StyleSheet.create({
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { width: '85%', maxHeight: '70%', backgroundColor: '#fff', borderRadius: 25, padding: 25, elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 4 },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#1976D2', marginBottom: 15, textAlign: 'left' },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  modalOverlay: { flex: 1, backgroundColor: colors.overlayMedium, justifyContent: 'center', alignItems: 'center' },
+  modalContent: { width: '85%', maxHeight: '70%', backgroundColor: colors.surface, borderRadius: 25, padding: 25, elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 4 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: colors.primary, marginBottom: 15, textAlign: 'left' },
   radioGroup: { marginBottom: 10 },
-  radioRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 15, borderBottomWidth: 0.5, borderBottomColor: '#F0F0F0' },
-  radioText: { fontSize: 16, color: '#444' },
-  radioTextSelected: { color: '#1976D2'},
-  radioCircle: { height: 22, width: 22, borderRadius: 11, borderWidth: 2, borderColor: '#CCC', alignItems: 'center', justifyContent: 'center' },
-  radioCircleSelected: { borderColor: '#1976D2' },
-  innerCircle: { height: 12, width: 12, borderRadius: 6, backgroundColor: '#1976D2' },
+  radioRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 15, borderBottomWidth: 0.5, borderBottomColor: colors.borderNavbar },
+  radioText: { fontSize: 16, color: colors.textBody },
+  radioTextSelected: { color: colors.primary },
+  radioCircle: { height: 22, width: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.borderRadio, alignItems: 'center', justifyContent: 'center' },
+  radioCircleSelected: { borderColor: colors.primary },
+  innerCircle: { height: 12, width: 12, borderRadius: 6, backgroundColor: colors.primary },
   buttonRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 15, marginTop: 10 },
   btnAction: { padding: 10, minWidth: 70, alignItems: 'center' },
-  btnCancelText: { color: '#888', fontSize: 16, fontWeight: '500' },
-  btnApplyText: { color: '#1976D2', fontSize: 16, fontWeight: 'bold' },
+  btnCancelText: { color: colors.textPlaceholder, fontSize: 16, fontWeight: '500' },
+  btnApplyText: { color: colors.primary, fontSize: 16, fontWeight: 'bold' },
 });

@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/shared/theme/useTheme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -7,12 +8,15 @@ interface InfoProps {
   compact?: boolean;
 }
 
-const RequestCardInfo: React.FC<InfoProps> = ({ senderName, requestDate, compact = false }) => (
-  <View style={[styles.infoContainer, compact && styles.infoContainerCompact]}>
-    <Text style={[styles.senderText, compact && styles.senderTextCompact]}>{senderName}</Text>
-    <Text style={[styles.dateText, compact && styles.dateTextCompact]}>{requestDate}</Text>
-  </View>
-);
+const RequestCardInfo: React.FC<InfoProps> = ({ senderName, requestDate, compact = false }) => {
+  const { colors } = useTheme();
+  return (
+    <View style={[styles.infoContainer, compact && styles.infoContainerCompact]}>
+      <Text style={[styles.senderText, compact && styles.senderTextCompact, { color: colors.textDark }]}>{senderName}</Text>
+      <Text style={[styles.dateText, compact && styles.dateTextCompact, { color: colors.textSecondary }]}>{requestDate}</Text>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   infoContainer: {
@@ -25,9 +29,9 @@ const styles = StyleSheet.create({
   infoContainerCompact: {
     paddingHorizontal: 12,
   },
-  senderText: { fontSize: 14, fontWeight: 'bold', color: '#000' },
+  senderText: { fontSize: 14, fontWeight: 'bold' },
   senderTextCompact: { fontSize: 13 },
-  dateText: { fontSize: 11, color: '#555' },
+  dateText: { fontSize: 11 },
   dateTextCompact: { fontSize: 10 },
 });
 

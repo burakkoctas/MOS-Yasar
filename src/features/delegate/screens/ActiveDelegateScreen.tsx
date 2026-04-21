@@ -1,5 +1,6 @@
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import ConfirmModal from '@/src/shared/components/ui/ConfirmModal';
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -9,6 +10,7 @@ import { delegateService } from '../services/delegateService';
 import { Delegate } from '../types';
 
 export default function ActiveDelegatesScreen() {
+  const { colors } = useTheme();
   const router = useRouter();
   const [delegates, setDelegates] = useState<Delegate[]>([]);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -46,18 +48,18 @@ export default function ActiveDelegatesScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen
         options={{
           headerShown: true,
           headerTitle: 'Aktif Vekaletlerim',
           headerTitleAlign: 'center',
           headerShadowVisible: false,
-          headerStyle: { backgroundColor: '#FAFAFA' },
-          headerTitleStyle: { color: '#1976D2', fontSize: 18, fontWeight: 'normal' },
+          headerStyle: { backgroundColor: colors.background },
+          headerTitleStyle: { color: colors.primary, fontSize: 18, fontWeight: 'normal' },
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 5, padding: 5 }}>
-              <Ionicons name="arrow-back" size={28} color="#1976D2" />
+              <Ionicons name="arrow-back" size={28} color={colors.primary} />
             </TouchableOpacity>
           ),
           headerRight: () => (
@@ -65,7 +67,7 @@ export default function ActiveDelegatesScreen() {
               onPress={() => router.push('/settings/create-delegate')}
               style={{ marginRight: 5, padding: 5 }}
             >
-              <Ionicons name="add" size={32} color="#1976D2" />
+              <Ionicons name="add" size={32} color={colors.primary} />
             </TouchableOpacity>
           ),
         }}
@@ -79,8 +81,8 @@ export default function ActiveDelegatesScreen() {
         renderItem={({ item }) => <DelegateCard delegate={item} onDelete={setPendingDeleteId} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="document-text-outline" size={60} color="#1976D2" />
-            <Text style={[styles.emptyText, { color: '#1976D2' }]}>
+            <Ionicons name="document-text-outline" size={60} color={colors.primary} />
+            <Text style={[styles.emptyText, { color: colors.primary }]}>
               Aktif vekaletiniz bulunmuyor.
             </Text>
           </View>
@@ -104,7 +106,7 @@ export default function ActiveDelegatesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
+  container: { flex: 1 },
   listContent: { padding: 20, paddingBottom: 40 },
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 100 },
   emptyText: { marginTop: 15, fontSize: 16 },

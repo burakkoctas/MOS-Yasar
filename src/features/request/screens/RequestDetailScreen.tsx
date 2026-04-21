@@ -1,12 +1,14 @@
 import ActionDrawer from '@/src/shared/components/ui/ActionDrawer';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import ConfirmModal from '@/src/shared/components/ui/ConfirmModal';
+import { AppColors } from '@/src/shared/theme/colors';
+import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as Sharing from 'expo-sharing';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RequestDetailHeader from '../components/detail/RequestDetailHeader';
@@ -146,6 +148,8 @@ function createPreviewHtml(fileName: string, base64Content: string) {
 }
 
 export default function RequestDetailScreen() {
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id, source } = useLocalSearchParams<{ id: string; source?: string }>();
@@ -337,18 +341,16 @@ export default function RequestDetailScreen() {
             <View
               style={[
                 styles.statusBar,
-                request.statusBackgroundColor
-                  ? {
-                      backgroundColor: request.statusBackgroundColor,
-                      borderColor: request.statusBackgroundColor,
-                    }
-                  : null,
+                request.statusBackgroundColor && {
+                  backgroundColor: isDark ? 'transparent' : request.statusBackgroundColor,
+                  borderColor: isDark ? request.statusBackgroundColor : 'transparent',
+                },
               ]}
             >
               <Text
                 style={[
                   styles.statusText,
-                  request.statusTextColor ? { color: request.statusTextColor } : null,
+                  request.statusTextColor && { color: request.statusTextColor },
                 ]}
               >
                 {request.statusLabel || request.statu}
@@ -425,7 +427,7 @@ export default function RequestDetailScreen() {
                       <Ionicons
                         name={getAttachmentIconName(attachment.name)}
                         size={18}
-                        color="#1976D2"
+                        color={colors.primary}
                         style={styles.attachmentIcon}
                       />
                       <Text style={styles.attachmentButtonText}>{attachment.name}</Text>
@@ -467,46 +469,46 @@ export default function RequestDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
+const createStyles = (colors: AppColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FAFAFA',
+    backgroundColor: colors.background,
   },
-  emptyText: { fontSize: 16, color: '#666' },
+  emptyText: { fontSize: 16, color: colors.textMuted },
   scrollContent: { padding: 20, paddingTop: 12 },
   statusBar: {
     width: '90%',
     alignSelf: 'center',
-    backgroundColor: '#FFF3E0',
+    backgroundColor: 'transparent',
     paddingVertical: 8,
     borderRadius: 20,
     alignItems: 'center',
     marginBottom: 25,
     borderWidth: 1,
-    borderColor: '#FFE0B2',
+    borderColor: colors.border,
   },
-  statusText: { color: '#E65100', fontWeight: 'bold', fontSize: 14 },
+  statusText: { color: colors.textPrimary, fontWeight: 'bold', fontSize: 14 },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 5,
   },
-  nameText: { fontSize: 22, fontWeight: 'bold', color: '#333' },
-  dateText: { fontSize: 14, color: '#666' },
-  belgeNoText: { fontSize: 14, color: '#888', marginBottom: 20 },
-  descriptionText: { fontSize: 14, color: '#444', lineHeight: 20, marginBottom: 8 },
+  nameText: { fontSize: 22, fontWeight: 'bold', color: colors.textPrimary },
+  dateText: { fontSize: 14, color: colors.textMuted },
+  belgeNoText: { fontSize: 14, color: colors.textPlaceholder, marginBottom: 20 },
+  descriptionText: { fontSize: 14, color: colors.textBody, lineHeight: 20, marginBottom: 8 },
   attachmentButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#D8E7F5',
+    borderColor: colors.primaryTint,
   },
   attachmentContent: {
     flexDirection: 'row',
@@ -516,7 +518,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   attachmentButtonText: {
-    color: '#1976D2',
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
     flex: 1,
@@ -524,7 +526,7 @@ const styles = StyleSheet.create({
   },
   attachmentLoadingText: {
     marginTop: 8,
-    color: '#7B97B5',
+    color: colors.attachmentLoadingText,
     fontSize: 12,
     fontWeight: '500',
   },
