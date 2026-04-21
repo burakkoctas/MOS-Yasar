@@ -1,7 +1,8 @@
+import { isNetworkError } from '@/src/shared/api/apiClient';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import DateRangePickerModal from '@/src/features/request/components/DateRangePickerModal';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import EntranceTransition from '@/src/shared/components/ui/EntranceTransition';
@@ -38,10 +39,6 @@ export default function RequestHistoryScreen() {
   const [searchKeyword, setSearchKeyword] = useState('');
 
   const fetchHistory = useCallback(async (rangeText: string, nextSearchValue = '') => {
-    console.log('[request-history] fetch start', {
-      rangeText,
-      searchValue: nextSearchValue,
-    });
     setIsContentReady(false);
     setIsLoading(true);
     try {
@@ -49,25 +46,20 @@ export default function RequestHistoryScreen() {
         range: parseDateRangeText(rangeText),
         searchValue: nextSearchValue,
       });
-      console.log('[request-history] fetch success', {
-        categoryCount: data.length,
-        itemCount: data.reduce((total, group) => total + group.data.length, 0),
-      });
       setAllHistory(data);
       setIsContentReady(true);
-      console.log('[request-history] content ready');
+    } catch (error) {
+      setIsContentReady(true);
+      if (isNetworkError(error)) {
+        Alert.alert('Bağlantı Hatası', 'Sunucuya bağlanılamıyor.');
+      }
     } finally {
-      console.log('[request-history] fetch end');
       setIsLoading(false);
     }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      console.log('[request-history] screen focused', {
-        dateRangeText,
-        searchKeyword,
-      });
       setActiveCategoryTitle(null);
       fetchHistory(dateRangeText, searchKeyword);
     }, [dateRangeText, fetchHistory, searchKeyword]),
@@ -81,9 +73,6 @@ export default function RequestHistoryScreen() {
             <RequestFilterBar
               onSearch={setSearchInputValue}
               onSubmitSearch={() => {
-                console.log('[request-history] submit search', {
-                  searchInputValue,
-                });
                 setActiveCategoryTitle(null);
                 setSearchKeyword(searchInputValue);
                 fetchHistory(dateRangeText, searchInputValue);
@@ -126,10 +115,6 @@ export default function RequestHistoryScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onSave={(rangeText) => {
-          console.log('[request-history] date range saved', {
-            rangeText,
-            searchKeyword,
-          });
           setDateRangeText(rangeText);
           setModalVisible(false);
           fetchHistory(rangeText, searchKeyword);

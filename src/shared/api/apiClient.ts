@@ -142,12 +142,6 @@ export class FetchApiClient implements ApiClient {
       headers['Content-Type'] = 'application/json';
     }
 
-    console.log('[api] request start', {
-      method,
-      requestUrl,
-      hasBody: requestBody !== undefined,
-    });
-
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
@@ -162,20 +156,12 @@ export class FetchApiClient implements ApiClient {
       });
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new ApiError('TIMEOUT', 'İstek zaman aşımına uğradı.');
+        throw new ApiError('TIMEOUT', 'Sunucuya bağlanılamıyor.');
       }
-      console.log('[api] network error', { method, requestUrl, error });
-      throw error;
+      throw new ApiError('NETWORK_ERROR', 'Sunucuya bağlanılamıyor.');
     } finally {
       clearTimeout(timeoutId);
     }
-
-    console.log('[api] response', {
-      method,
-      requestUrl,
-      status: response.status,
-      ok: response.ok,
-    });
 
     if (!response.ok) {
       throw await parseErrorResponse(response);
@@ -189,6 +175,10 @@ export class UnconfiguredApiClient implements ApiClient {
   async request<T>(): Promise<T> {
     throw new Error('API client is not configured yet.');
   }
+}
+
+export function isNetworkError(error: unknown): boolean {
+  return error instanceof ApiError && (error.code === 'NETWORK_ERROR' || error.code === 'TIMEOUT');
 }
 
 export function createApiClient(baseUrl?: string): ApiClient {

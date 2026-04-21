@@ -41,10 +41,6 @@ const pastDelegates: Delegate[] = [
   },
 ];
 
-function wait() {
-  return Promise.resolve();
-}
-
 function formatDate(date: Date) {
   return date.toLocaleDateString('tr-TR', {
     day: '2-digit',
@@ -84,18 +80,14 @@ export interface DelegateService {
 
 const mockDelegateService: DelegateService = {
   async getActiveDelegates(): Promise<Delegate[]> {
-    await wait();
     return activeDelegates.map((delegate) => ({ ...delegate }));
   },
 
   async getPastDelegates(): Promise<Delegate[]> {
-    await wait();
     return pastDelegates.map((delegate) => ({ ...delegate }));
   },
 
   async createDelegate(payload: CreateDelegatePayload): Promise<Delegate> {
-    await wait();
-
     if (!payload.email.includes('@')) {
       throw new Error('Geçerli bir e-posta adresi girin.');
     }
@@ -122,8 +114,6 @@ const mockDelegateService: DelegateService = {
   },
 
   async revokeDelegate(id: string): Promise<void> {
-    await wait();
-
     const index = activeDelegates.findIndex((delegate) => delegate.id === id);
 
     if (index >= 0) {

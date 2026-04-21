@@ -35,7 +35,7 @@ export default function PastDelegateScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Geçmiş Vekaletlerim',
+          title: 'Geçmiş Vekalet',
           headerTitleAlign: 'center',
           headerTitleStyle: { color: colors.primary, fontWeight: 'normal', fontSize: 18 },
           headerTintColor: colors.primary,

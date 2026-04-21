@@ -145,7 +145,7 @@ export default function RegisterScreen() {
             <TouchableOpacity
               style={[
                 styles.registerButton,
-                isDark && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary },
+                isDark && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary, elevation: 0, shadowOpacity: 0 },
               ]}
               onPress={handleRegister}
               activeOpacity={0.8}

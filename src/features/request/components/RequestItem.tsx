@@ -31,7 +31,7 @@ const RequestItem: React.FC<RequestItemProps> = ({
 
   return (
     <Pressable
-      style={[styles.cardContainer, compact && styles.cardContainerCompact, { backgroundColor: colors.surface, borderColor: colors.borderCard }]}
+      style={[styles.cardContainer, compact && styles.cardContainerCompact, { backgroundColor: colors.background, borderColor: colors.borderCard }]}
       onPress={() => onItemPress(requestData)}
     >
       <RequestCardHeader
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     borderRadius: 12,
     marginBottom: 8,
-    marginHorizontal: 10,
+    marginHorizontal: 3,
     paddingVertical: 8,
     borderWidth: 1,
     overflow: 'hidden',

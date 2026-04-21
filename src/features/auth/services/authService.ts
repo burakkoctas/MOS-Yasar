@@ -48,10 +48,6 @@ interface JwtPayload {
   };
 }
 
-function wait() {
-  return Promise.resolve();
-}
-
 function ensureUsername(username: string) {
   if (!username.trim()) {
     throw new Error('Kullanici adi bos birakilamaz.');
@@ -172,8 +168,6 @@ async function runVersionCheck() {
     },
   );
 
-  console.log('[auth] version check response', versionResponse);
-
   if (versionResponse.code !== 200) {
     throw new Error(
       versionResponse.title || versionResponse.message || 'Versiyon kontrolu basarisiz oldu.',
@@ -190,9 +184,7 @@ export interface AuthService {
 
 const mockAuthService: AuthService = {
   async login(payload: LoginPayload): Promise<AuthSession> {
-    await wait();
     const dto = mapLoginPayloadToDto(payload);
-    console.log('[auth] mock login kullanildi', { username: dto.username });
     ensureUsername(dto.username);
     ensurePassword(dto.password);
 
@@ -208,7 +200,6 @@ const mockAuthService: AuthService = {
   },
 
   async register(payload: RegisterPayload): Promise<string | null> {
-    await wait();
     const dto = mapRegisterPayloadToDto(payload);
 
     if (!dto.firstName || !dto.lastName) {
@@ -220,7 +211,6 @@ const mockAuthService: AuthService = {
   },
 
   async setPassword(payload: SetPasswordPayload): Promise<string | null> {
-    await wait();
     const dto = mapSetPasswordPayloadToDto(payload);
     ensureEmail(dto.email);
     ensurePassword(dto.newPassword);
@@ -228,7 +218,6 @@ const mockAuthService: AuthService = {
   },
 
   async requestPasswordReset(payload: PasswordResetPayload): Promise<void> {
-    await wait();
     const dto = mapPasswordResetPayloadToDto(payload);
     ensureEmail(dto.email);
   },
@@ -237,7 +226,6 @@ const mockAuthService: AuthService = {
 const remoteAuthService: AuthService = {
   async login(payload: LoginPayload): Promise<AuthSession> {
     const dto = mapLoginPayloadToDto(payload);
-    console.log('[auth] remote login basladi', { username: dto.username });
     ensureUsername(dto.username);
     ensurePassword(dto.password);
 
@@ -269,8 +257,6 @@ const remoteAuthService: AuthService = {
       }
       throw error;
     }
-
-    console.log('[auth] login success');
 
     return mapLoginResponseToSession(tokenResponse);
   },
@@ -329,7 +315,6 @@ const remoteAuthService: AuthService = {
 
 export const authService: AuthService = {
   async login(payload: LoginPayload) {
-    console.log('[auth] aktif mod', { authMode: isRemoteAuthEnabled() ? 'remote' : 'mock' });
     return isRemoteAuthEnabled()
       ? remoteAuthService.login(payload)
       : mockAuthService.login(payload);

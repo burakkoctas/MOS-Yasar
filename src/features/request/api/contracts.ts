@@ -136,12 +136,18 @@ export interface RequestListQueryDto {
   search?: string;
 }
 
-export interface RequestActionDto {
-  ids: string[];
-  action: 'APPROVE' | 'REJECT';
+export interface ApproveRequestDto {
+  appVersion: string;
+  deviceInfo: string;
+  operationDescription: string | null;
+  requestId: string;
+  status: number;
 }
 
-export interface RequestActionResponseDto {
-  processedIds: string[];
-  action: 'APPROVE' | 'REJECT';
+export interface ApproveResponseDto {
+  code: number;
+  message: string | null;
+  data: unknown;
+  dataList: unknown;
+  title: string | null;
 }

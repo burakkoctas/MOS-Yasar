@@ -158,7 +158,7 @@ export default function ActionDrawer({
   });
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+    <View style={[StyleSheet.absoluteFill, { zIndex: 999, elevation: 999 }]} pointerEvents="box-none">
       <View
         style={[
           styles.overlay,

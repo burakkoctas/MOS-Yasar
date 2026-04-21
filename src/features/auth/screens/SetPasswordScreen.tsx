@@ -131,7 +131,7 @@ export default function SetPasswordScreen() {
               <TouchableOpacity
                 style={[
                   styles.submitButton,
-                  isDark && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary },
+                  isDark && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary, elevation: 0, shadowOpacity: 0 },
                 ]}
                 onPress={handleSubmit}
                 activeOpacity={0.8}

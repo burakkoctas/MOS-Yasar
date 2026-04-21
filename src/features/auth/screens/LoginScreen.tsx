@@ -130,7 +130,7 @@ export default function LoginScreen() {
         password: nextPassword,
         rememberMe: nextRememberMe,
       });
-      authStore.setSession(session);
+      authStore.setSession(session, nextRememberMe);
       router.replace('/(tabs)');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Giriş yapılamadı.';
@@ -176,7 +176,7 @@ export default function LoginScreen() {
 
     setUsername(SUBCATEGORY_DEMO_USERNAME);
     setPassword('');
-    authStore.setSession(mockSession);
+    authStore.setSession(mockSession, false);
     router.replace('/(tabs)');
   };
 
@@ -325,7 +325,7 @@ export default function LoginScreen() {
               <TouchableOpacity
                 style={[
                   styles.loginButton,
-                  isDark && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary },
+                  isDark && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary, elevation: 0, shadowOpacity: 0 },
                 ]}
                 onPress={handleLogin}
                 activeOpacity={0.8}

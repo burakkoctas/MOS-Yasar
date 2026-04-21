@@ -3,11 +3,12 @@ import RadioDateModal from '@/src/features/request/components/RadioDateModal';
 import ActionDrawer from '@/src/shared/components/ui/ActionDrawer';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import EntranceTransition from '@/src/shared/components/ui/EntranceTransition';
+import { isNetworkError } from '@/src/shared/api/apiClient';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import RequestFilterBar from '../components/RequestFilterBar';
 import { useRequestFilter } from '../hooks/useRequestFilter';
 import { requestService } from '../services/requestService';
@@ -69,8 +70,10 @@ export default function RequestListScreen() {
       setAllRequests(data);
       setIsContentReady(true);
     } catch (error) {
-      console.error('[request-list] talepler yuklenemedi', error);
       setIsContentReady(true);
+      if (isNetworkError(error)) {
+        Alert.alert('Bağlantı Hatası', 'Sunucuya bağlanılamıyor.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -92,6 +95,12 @@ export default function RequestListScreen() {
       await requestService.processAction(selectedIds, operation);
       setSelectedIds([]);
       await fetchData();
+    } catch (error) {
+      if (isNetworkError(error)) {
+        Alert.alert('Bağlantı Hatası', 'Sunucuya bağlanılamıyor.');
+      } else {
+        Alert.alert('Hata', error instanceof Error ? error.message : 'İşlem gerçekleştirilemedi.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -184,7 +193,7 @@ export default function RequestListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 15, paddingTop: 10 },
+  container: { flex: 1, paddingHorizontal: 8, paddingTop: 10 },
   headerContainer: { alignItems: 'center', marginTop: 15, marginBottom: 15 },
   title: { fontSize: 18, fontWeight: '500', letterSpacing: 1 },
   spacingPlaceholder: { height: 23 },

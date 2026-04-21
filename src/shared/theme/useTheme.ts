@@ -2,7 +2,7 @@ import { lightColors, darkColors, AppColors } from './colors';
 import { useThemeStore } from '@/src/store/useThemeStore';
 
 export function useTheme() {
-  const { resolvedScheme, mode, setMode } = useThemeStore();
-  const colors: AppColors = resolvedScheme === 'dark' ? darkColors : lightColors;
-  return { colors, isDark: resolvedScheme === 'dark', mode, setMode };
+  const { mode, setMode } = useThemeStore();
+  const colors: AppColors = mode === 'dark' ? darkColors : lightColors;
+  return { colors, isDark: mode === 'dark', mode, setMode };
 }

@@ -1,5 +1,7 @@
-import { API_BASE_URL } from '@/src/config/appConfig';
+import { API_BASE_URL, APP_VERSION_BY_PLATFORM } from '@/src/config/appConfig';
 import {
+  ApproveRequestDto,
+  ApproveResponseDto,
   RemoteAttachmentContentResponseDto,
   RemoteRequestAttachmentDto,
   RemoteRequestDetailDataDto,
@@ -23,6 +25,7 @@ import {
 import { FetchApiClient } from '@/src/shared/api/apiClient';
 import { DUMMY_DATA } from '@/src/shared/api/mockData';
 import { authStore } from '@/src/store/useAuthStore';
+import { Platform } from 'react-native';
 
 const GET_REQUESTS_SINGLE_PATH = '/mos/api/v3/GetRequestsSingle';
 const GET_REQUESTS_BY_DATE_RANGE_PATH = '/mos/api/v3/GetRequestsByDateRange';
@@ -32,10 +35,6 @@ const GET_ATTACHMENT_CONTENT_PATH = '/mos/api/v3/GetAttachmentContent';
 let remoteGroupsCache: CategoryGroup[] = [];
 let remoteHistoryGroupsCache: CategoryGroup[] = [];
 
-
-function wait() {
-  return Promise.resolve();
-}
 
 function cloneGroups(groups: CategoryGroup[]): CategoryGroup[] {
   return groups.map((group) => ({
@@ -285,17 +284,14 @@ function encodeAsciiToBase64(value: string) {
   return output;
 }
 
-function getRemoteActionType(operation: RequestOperation): 'APPROVE' | 'REJECT' | null {
-  switch (operation.statusCode) {
-    case 1:
-    case 3:
-      return 'APPROVE';
-    case 2:
-    case 5:
-      return 'REJECT';
-    default:
-      return null;
+function buildDeviceInfo() {
+  if (Platform.OS === 'android') {
+    const constants = Platform.constants as { Brand?: string; Model?: string };
+    const brand = constants.Brand ?? 'Android';
+    const model = constants.Model ?? '';
+    return `${brand} ${model}, Android ${Platform.Version}`.trim();
   }
+  return `iPhone, iOS ${Platform.Version}`;
 }
 
 function createRequestDetails(item: RequestItem): RequestItem {
@@ -586,13 +582,10 @@ export interface RequestService {
 
 const mockRequestService: RequestService = {
   async getRequests(): Promise<CategoryGroup[]> {
-    await wait();
     return cloneGroups(mockGroups);
   },
 
   async getRequestHistory(query?: RequestQuery): Promise<CategoryGroup[]> {
-    await wait();
-
     const sourceGroups = mockGroups;
 
     return cloneGroups(sourceGroups)
@@ -604,8 +597,6 @@ const mockRequestService: RequestService = {
   },
 
   async getRequestById(id: string): Promise<RequestItem | null> {
-    await wait();
-
     const sourceGroups = mockGroups;
 
     for (const group of sourceGroups) {
@@ -622,13 +613,10 @@ const mockRequestService: RequestService = {
   },
 
   async getAttachmentContent(_: string): Promise<RequestAttachmentContent | null> {
-    await wait();
     return null;
   },
 
   async processAction(ids: string[], operation: RequestOperation): Promise<void> {
-    await wait();
-
     const targetGroups = mockGroups;
 
     targetGroups.forEach((group) => {
@@ -651,18 +639,13 @@ const remoteRequestService: RequestService = {
     const accessToken = getRemoteRequestToken();
 
     if (!accessToken) {
-      console.log('[request-service] getRequests fallback to mock');
       return mockRequestService.getRequests();
     }
 
-    console.log('[request-service] getRequests request start');
     const response = await apiClient.request<RemoteRequestListResponseDto>(GET_REQUESTS_SINGLE_PATH, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-    });
-    console.log('[request-service] getRequests request success', {
-      itemCount: response.data?.length ?? 0,
     });
 
     const groups = mapRemoteResponseToGroups(response.data ?? []);
@@ -675,10 +658,6 @@ const remoteRequestService: RequestService = {
     const accessToken = getRemoteRequestToken();
 
     if (!accessToken || !query?.range) {
-      console.log('[request-service] getRequestHistory fallback to mock', {
-        hasAccessToken: Boolean(accessToken),
-        hasRange: Boolean(query?.range),
-      });
       return mockRequestService.getRequestHistory(query);
     }
 
@@ -688,7 +667,6 @@ const remoteRequestService: RequestService = {
       searchValue: query.searchValue ?? '',
     };
 
-    console.log('[request-service] getRequestHistory payload', historyQuery);
     const response = await apiClient.request<RemoteRequestHistoryResponseDto>(
       GET_REQUESTS_BY_DATE_RANGE_PATH,
       {
@@ -699,9 +677,6 @@ const remoteRequestService: RequestService = {
         },
       },
     );
-    console.log('[request-service] getRequestHistory request success', {
-      itemCount: response.data?.length ?? 0,
-    });
 
     const groupedRequests = new Map<string, RequestItem[]>();
 
@@ -727,17 +702,9 @@ const remoteRequestService: RequestService = {
     const accessToken = getRemoteRequestToken();
 
     if (!accessToken) {
-      console.log('[request-service] getRequestById fallback to mock', {
-        id,
-        source,
-      });
       return mockRequestService.getRequestById(id);
     }
 
-    console.log('[request-service] getRequestById request start', {
-      id,
-      source,
-    });
     const response = await apiClient.request<RemoteRequestDetailResponseDto>(
       `${GET_DESCRIPTION_PATH}/${id}`,
       {
@@ -746,17 +713,8 @@ const remoteRequestService: RequestService = {
         },
       },
     );
-    console.log('[request-service] getRequestById request success', {
-      id,
-      hasData: Boolean(response.data),
-      source,
-    });
 
     if (!response.data) {
-      console.log('[request-service] getRequestById using cache fallback', {
-        id,
-        source,
-      });
       return (
         getCachedRemoteRequestById(id, source) ??
         mockRequestService.getRequestById(id)
@@ -770,17 +728,10 @@ const remoteRequestService: RequestService = {
     const accessToken = getRemoteRequestToken();
 
     if (!accessToken) {
-      console.log('[request-service] getAttachmentContent skipped without token', {
-        attachmentId,
-      });
       return null;
     }
 
     const encodedAttachmentId = encodeAsciiToBase64(attachmentId);
-    console.log('[request-service] getAttachmentContent request start', {
-      attachmentId,
-      encodedAttachmentId,
-    });
     const response = await apiClient.request<RemoteAttachmentContentResponseDto>(
       `${GET_ATTACHMENT_CONTENT_PATH}?attachmentId=${encodeURIComponent(encodedAttachmentId)}`,
       {
@@ -789,10 +740,6 @@ const remoteRequestService: RequestService = {
         },
       },
     );
-    console.log('[request-service] getAttachmentContent request success', {
-      attachmentId,
-      hasContent: Boolean(response.data?.content),
-    });
 
     if (!response.data?.content) {
       return null;
@@ -806,23 +753,38 @@ const remoteRequestService: RequestService = {
   },
 
   async processAction(ids: string[], operation: RequestOperation) {
-    const action = getRemoteActionType(operation);
+    const accessToken = getRemoteRequestToken();
 
-    if (!action) {
-      throw new Error(
-        'Remote istek aksiyonu sadece onay ve reddet islemeleri icin tanimli. Bu operasyon icin backend kontrati netlestirilmeli.',
-      );
+    if (!accessToken) {
+      return mockRequestService.processAction(ids, operation);
     }
 
-    console.log('[request-service] remote processAction blocked', {
-      ids,
-      action,
-      operationName: operation.operationName,
-      statusCode: operation.statusCode,
-    });
+    const appVersion = APP_VERSION_BY_PLATFORM[Platform.OS === 'ios' ? 'ios' : 'android'];
+    const deviceInfo = buildDeviceInfo();
 
-    throw new Error(
-      'Remote processAction artik mock servise dusmuyor. Bu islem icin backend endpointi ve payload kontrati projeye eklenmeli.',
+    await Promise.all(
+      ids.map(async (requestId) => {
+        const body: ApproveRequestDto = {
+          appVersion,
+          deviceInfo,
+          operationDescription: null,
+          requestId,
+          status: operation.statusCode,
+        };
+
+        const response = await apiClient.request<ApproveResponseDto>(
+          '/mos/api/v3/Approve3',
+          {
+            method: 'POST',
+            body,
+            headers: { Authorization: `Bearer ${accessToken}` },
+          },
+        );
+
+        if (response.code !== 200) {
+          throw new Error(response.title || response.message || 'İşlem gerçekleştirilemedi.');
+        }
+      }),
     );
   },
 };

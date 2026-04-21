@@ -5,12 +5,17 @@ import { StyleSheet, Text, View } from 'react-native';
 
 interface RequestInfoRowProps {
   label: string;
-  value: string;
+  value?: string | null;
 }
 
 export default function RequestInfoRow({ label, value }: RequestInfoRowProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  if (!value || value === '-') {
+    return null;
+  }
+
   const isEmailValue = value.includes('@');
 
   return (

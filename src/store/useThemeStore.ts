@@ -1,32 +1,32 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Appearance } from 'react-native';
 import { useSyncExternalStore } from 'react';
 
-export type ThemeMode = 'system' | 'light' | 'dark';
+export type ThemeMode = 'light' | 'dark';
+
+const STORAGE_KEY = '@mos/theme_mode';
 
 interface ThemeState {
   mode: ThemeMode;
-  resolvedScheme: 'light' | 'dark';
 }
 
-function resolveScheme(mode: ThemeMode): 'light' | 'dark' {
-  if (mode !== 'system') return mode;
+function getSystemMode(): ThemeMode {
   return Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';
 }
 
 const listeners = new Set<() => void>();
 
 let themeState: ThemeState = {
-  mode: 'system',
-  resolvedScheme: resolveScheme('system'),
+  mode: getSystemMode(),
 };
 
 function emitChange() {
   listeners.forEach((l) => l());
 }
 
-Appearance.addChangeListener(() => {
-  if (themeState.mode === 'system') {
-    themeState = { ...themeState, resolvedScheme: resolveScheme('system') };
+AsyncStorage.getItem(STORAGE_KEY).then((saved) => {
+  if (saved === 'light' || saved === 'dark') {
+    themeState = { mode: saved };
     emitChange();
   }
 });
@@ -43,8 +43,9 @@ function getSnapshot() {
 export const themeStore = {
   getState: getSnapshot,
   setMode(mode: ThemeMode) {
-    themeState = { mode, resolvedScheme: resolveScheme(mode) };
+    themeState = { mode };
     emitChange();
+    AsyncStorage.setItem(STORAGE_KEY, mode);
   },
 };
 

@@ -3,7 +3,8 @@ import AppLoader from '@/src/shared/components/ui/AppLoader';
 import ConfirmModal from '@/src/shared/components/ui/ConfirmModal';
 import { AppColors } from '@/src/shared/theme/colors';
 import { useTheme } from '@/src/shared/theme/useTheme';
-import { Ionicons } from '@expo/vector-icons';
+import { isNetworkError } from '@/src/shared/api/apiClient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as Sharing from 'expo-sharing';
@@ -17,31 +18,30 @@ import RequestInfoRow from '../components/detail/RequestInfoRow';
 import { requestService } from '../services/requestService';
 import { RequestAttachment, RequestItem, RequestOperation } from '../types';
 
-function getAttachmentIconName(fileName: string): keyof typeof Ionicons.glyphMap {
+function getAttachmentIcon(fileName: string): { name: string; color: string } {
   const extension = fileName.split('.').pop()?.toLowerCase();
-
   switch (extension) {
     case 'pdf':
-      return 'document-text-outline';
+      return { name: 'file-pdf-box', color: '#F44336' };
     case 'xls':
     case 'xlsx':
     case 'csv':
-      return 'grid-outline';
+      return { name: 'file-excel-box', color: '#217346' };
     case 'doc':
     case 'docx':
-      return 'document-outline';
+      return { name: 'file-word-box', color: '#2B579A' };
     case 'jpg':
     case 'jpeg':
     case 'png':
     case 'gif':
     case 'webp':
-      return 'image-outline';
+      return { name: 'file-image', color: '#FF9800' };
     case 'zip':
     case 'rar':
     case '7z':
-      return 'archive-outline';
+      return { name: 'folder-zip', color: '#795548' };
     default:
-      return 'attach-outline';
+      return { name: 'file-outline', color: '#9E9E9E' };
   }
 }
 
@@ -164,30 +164,24 @@ export default function RequestDetailScreen() {
       return;
     }
 
-    console.log('[request-detail] load start', {
-      id,
-      source: source === 'history' ? 'history' : 'request',
-    });
     setIsLoading(true);
     try {
       const nextRequest = await requestService.getRequestById(
         id,
         source === 'history' ? 'history' : 'request',
       );
-      console.log('[request-detail] load success', {
-        found: Boolean(nextRequest),
-        attachmentCount: nextRequest?.attachments?.length ?? 0,
-      });
       setRequest(nextRequest);
+    } catch (error) {
+      if (isNetworkError(error)) {
+        Alert.alert('Bağlantı Hatası', 'Sunucuya bağlanılamıyor.');
+      }
     } finally {
-      console.log('[request-detail] load end');
       setIsLoading(false);
     }
   }, [id, source]);
 
   useFocusEffect(
     useCallback(() => {
-      console.log('[request-detail] screen focused');
       loadRequest();
     }, [loadRequest]),
   );
@@ -197,17 +191,17 @@ export default function RequestDetailScreen() {
       return;
     }
 
-    console.log('[request-detail] action start', {
-      requestId: request.id,
-      operationName: operation.operationName,
-      statusCode: operation.statusCode,
-    });
     setIsLoading(true);
     try {
       await requestService.processAction([request.id], operation);
       router.back();
+    } catch (error) {
+      if (isNetworkError(error)) {
+        Alert.alert('Bağlantı Hatası', 'Sunucuya bağlanılamıyor.');
+      } else {
+        Alert.alert('Hata', error instanceof Error ? error.message : 'İşlem gerçekleştirilemedi.');
+      }
     } finally {
-      console.log('[request-detail] action end');
       setIsLoading(false);
     }
   };
@@ -215,97 +209,70 @@ export default function RequestDetailScreen() {
   const handleAttachmentPress = useCallback(
     async (attachment: RequestAttachment) => {
       try {
-        console.log('[request-detail] attachment open start', {
-          attachmentId: attachment.id,
-          attachmentName: attachment.name,
-        });
-        setActiveAttachmentId(attachment.id);
-
-        const attachmentContent = await requestService.getAttachmentContent(attachment.id);
-
-        if (!attachmentContent?.content) {
-          Alert.alert('Ek Açılamadı', 'Ek içeriği alınamadı.');
-          return;
-        }
-
         const cacheDirectory = FileSystem.cacheDirectory;
-
         if (!cacheDirectory) {
           Alert.alert('Ek Açılamadı', 'Cihaz geçici dosya alanına erişemedi.');
           return;
         }
 
-        const safeFileName = attachmentContent.name.replace(/[<>:"/\\|?*]+/g, '_');
+        const safeFileName = attachment.name.replace(/[<>:"/\\|?*]+/g, '_');
         const fileUri = `${cacheDirectory}${safeFileName}`;
+        const fileInfo = await FileSystem.getInfoAsync(fileUri);
 
-        await FileSystem.writeAsStringAsync(fileUri, attachmentContent.content, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
+        if (!fileInfo.exists) {
+          setActiveAttachmentId(attachment.id);
+          const attachmentContent = await requestService.getAttachmentContent(attachment.id);
+          if (!attachmentContent?.content) {
+            Alert.alert('Ek Açılamadı', 'Ek içeriği alınamadı.');
+            return;
+          }
+          await FileSystem.writeAsStringAsync(fileUri, attachmentContent.content, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+        }
 
         if (Platform.OS === 'android') {
           const contentUri = await FileSystem.getContentUriAsync(fileUri);
-
           await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
             data: contentUri,
             flags: 1,
-            type: getAttachmentMimeType(attachmentContent.name),
-          });
-          console.log('[request-detail] attachment open success', {
-            attachmentId: attachment.id,
-            platform: Platform.OS,
-            mode: 'external-viewer',
+            type: getAttachmentMimeType(attachment.name),
           });
           return;
         }
 
-        if (supportsInlinePreview(attachmentContent.name)) {
-          const previewHtml = createPreviewHtml(attachmentContent.name, attachmentContent.content);
+        if (supportsInlinePreview(attachment.name)) {
           const previewFileUri = `${cacheDirectory}${safeFileName}.html`;
+          const previewFileInfo = await FileSystem.getInfoAsync(previewFileUri);
 
-          await FileSystem.writeAsStringAsync(previewFileUri, previewHtml);
+          if (!previewFileInfo.exists) {
+            const base64Content = await FileSystem.readAsStringAsync(fileUri, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            const previewHtml = createPreviewHtml(attachment.name, base64Content);
+            await FileSystem.writeAsStringAsync(previewFileUri, previewHtml);
+          }
 
           router.push({
             pathname: '/request/attachment-preview',
-            params: {
-              title: attachmentContent.name,
-              uri: previewFileUri,
-            },
-          });
-          console.log('[request-detail] attachment open success', {
-            attachmentId: attachment.id,
-            platform: Platform.OS,
-            mode: 'inline-preview',
+            params: { title: attachment.name, uri: previewFileUri },
           });
           return;
         }
 
         const canShare = await Sharing.isAvailableAsync();
-
         if (!canShare) {
           Alert.alert('Ek Açılamadı', 'Bu dosya türü uygulama içinde önizlenemedi.');
           return;
         }
-
         await Sharing.shareAsync(fileUri, {
-          mimeType: getAttachmentMimeType(attachmentContent.name),
-          dialogTitle: attachmentContent.name,
-        });
-        console.log('[request-detail] attachment open success', {
-          attachmentId: attachment.id,
-          platform: Platform.OS,
-          mode: 'sharing-fallback',
+          mimeType: getAttachmentMimeType(attachment.name),
+          dialogTitle: attachment.name,
         });
       } catch (error) {
-        console.log('[request-detail] attachment open error', {
-          attachmentId: attachment.id,
-          error,
-        });
         const message = error instanceof Error ? error.message : 'Ek açılırken hata oluştu.';
         Alert.alert('Ek Açılamadı', message);
       } finally {
-        console.log('[request-detail] attachment open end', {
-          attachmentId: attachment.id,
-        });
         setActiveAttachmentId(null);
       }
     },
@@ -327,6 +294,7 @@ export default function RequestDetailScreen() {
         topInset={insets.top}
         onBack={() => router.back()}
         onDelete={!isHistoryView ? () => setIsDeleteModalVisible(true) : undefined}
+        disabled={isLoading}
       />
 
       {request && (
@@ -424,10 +392,10 @@ export default function RequestDetailScreen() {
                     onPress={() => handleAttachmentPress(attachment)}
                   >
                     <View style={styles.attachmentContent}>
-                      <Ionicons
-                        name={getAttachmentIconName(attachment.name)}
-                        size={18}
-                        color={colors.primary}
+                      <MaterialCommunityIcons
+                        name={getAttachmentIcon(attachment.name).name as any}
+                        size={22}
+                        color={getAttachmentIcon(attachment.name).color}
                         style={styles.attachmentIcon}
                       />
                       <Text style={styles.attachmentButtonText}>{attachment.name}</Text>
@@ -508,7 +476,7 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     paddingHorizontal: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: colors.primaryTint,
+    borderColor: colors.primaryLightBorder,
   },
   attachmentContent: {
     flexDirection: 'row',

@@ -8,6 +8,7 @@ interface RequestDetailHeaderProps {
   onBack: () => void;
   onDelete?: () => void;
   topInset: number;
+  disabled?: boolean;
 }
 
 export default function RequestDetailHeader({
@@ -15,10 +16,14 @@ export default function RequestDetailHeader({
   onBack,
   onDelete,
   topInset,
+  disabled = false,
 }: RequestDetailHeaderProps) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.headerContainer, { paddingTop: topInset + 6, backgroundColor: colors.background, borderBottomColor: colors.borderNavbar }]}>
+    <View
+      pointerEvents={disabled ? 'none' : 'box-none'}
+      style={[styles.headerContainer, { paddingTop: topInset + 6, backgroundColor: colors.background, borderBottomColor: colors.borderNavbar }]}
+    >
       <Pressable style={styles.headerSideButton} onPress={onBack}>
         <Ionicons name="arrow-back" size={26} color={colors.primary} />
       </Pressable>

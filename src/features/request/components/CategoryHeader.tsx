@@ -47,7 +47,11 @@ export default function CategoryHeader({
           <Text style={[styles.countText, compact && styles.countTextCompact]}>{count}</Text>
         </View>
 
-        <Text style={[styles.title, compact && styles.titleCompact, expanded && styles.titleActive]}>
+        <Text
+          style={[styles.title, compact && styles.titleCompact, expanded && styles.titleActive]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
           {title}
         </Text>
       </Pressable>
@@ -84,7 +88,7 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    marginHorizontal: 10,
+    marginHorizontal: 3,
   },
   headerCompact: {
     borderRadius: 22,
@@ -124,7 +128,7 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   },
   countText: { fontSize: 18, fontWeight: 'bold', color: colors.primary },
   countTextCompact: { fontSize: 14 },
-  title: { fontSize: 16, fontWeight: '600', color: colors.textDark, marginLeft: 10 },
+  title: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.textDark, marginLeft: 10 },
   titleCompact: { fontSize: 14, marginLeft: 4 },
   titleActive: { color: colors.primary },
   rightContent: {

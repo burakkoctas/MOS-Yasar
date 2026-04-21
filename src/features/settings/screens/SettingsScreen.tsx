@@ -54,7 +54,6 @@ export default function SettingsScreen() {
 
   const themeModes: { key: ThemeMode; label: string }[] = [
     { key: 'light', label: 'Açık' },
-    { key: 'system', label: 'Sistem' },
     { key: 'dark', label: 'Koyu' },
   ];
 
@@ -94,7 +93,7 @@ export default function SettingsScreen() {
                   style={styles.menuItem}
                   onPress={() => router.push('/settings/past-delegates')}
                 >
-                  <Text style={styles.menuText}>Geçmiş vekaletlerim</Text>
+                  <Text style={styles.menuText}>Geçmiş Vekaletlerim</Text>
                   <Ionicons name="chevron-forward" size={20} color={colors.textSystemGray} />
                 </Pressable>
               </View>
