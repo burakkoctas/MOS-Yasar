@@ -206,6 +206,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: '500', letterSpacing: 1 },
   spacingPlaceholder: { height: 23 },
   listWrapper: { flex: 1 },
-  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 },
+  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyText: { marginTop: 16, fontSize: 15, color: '#9E9E9E', textAlign: 'center' },
 });

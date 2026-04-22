@@ -105,7 +105,7 @@ export default function ActiveAttorneyScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  listContent: { padding: 20, paddingBottom: 40 },
-  emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 100 },
+  listContent: { padding: 20, paddingBottom: 40, flexGrow: 1 },
+  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyText: { marginTop: 15, fontSize: 16 },
 });

@@ -73,7 +73,7 @@ export default function PastAttorneyScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  listContent: { padding: 15, paddingBottom: 40 },
+  listContent: { padding: 15, paddingBottom: 40, flexGrow: 1 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   emptyText: { fontSize: 16, textAlign: 'center' },
 });

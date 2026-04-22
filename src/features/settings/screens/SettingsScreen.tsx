@@ -83,15 +83,15 @@ export default function SettingsScreen() {
               <View style={styles.menuContainer}>
                 <Pressable
                   style={styles.menuItem}
-                  onPress={() => router.push('/settings/active-delegates')}
+                  onPress={() => router.push('/settings/active-attorneys')}
                 >
-                  <Text style={styles.menuText}>Aktif vekaletlerim</Text>
+                  <Text style={styles.menuText}>Aktif Vekaletlerim</Text>
                   <Ionicons name="chevron-forward" size={20} color={colors.textSystemGray} />
                 </Pressable>
 
                 <Pressable
                   style={styles.menuItem}
-                  onPress={() => router.push('/settings/past-delegates')}
+                  onPress={() => router.push('/settings/past-attorneys')}
                 >
                   <Text style={styles.menuText}>Geçmiş Vekaletlerim</Text>
                   <Ionicons name="chevron-forward" size={20} color={colors.textSystemGray} />

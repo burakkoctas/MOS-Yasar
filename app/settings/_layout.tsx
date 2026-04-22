@@ -1,10 +1,10 @@
-import { DelegateProvider } from '@/src/features/delegate/context/DelegateContext';
+import { AttorneyProvider } from '@/src/features/attorney/context/AttorneyContext';
 import { Stack } from 'expo-router';
 
-export default function DelegateLayout() {
+export default function SettingsLayout() {
   return (
-    <DelegateProvider>
+    <AttorneyProvider>
       <Stack screenOptions={{ headerShown: false }} />
-    </DelegateProvider>
+    </AttorneyProvider>
   );
 }
