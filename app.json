@@ -48,8 +48,8 @@
     "extra": {
       "router": {},
       "api": {
-        "mode": "mock",
-        "baseUrl": "",
+        "mode": "remote",
+        "baseUrl": "https://mos-tst.yasar.com.tr",
         "timeoutMs": 10000
       },
       "auth": {

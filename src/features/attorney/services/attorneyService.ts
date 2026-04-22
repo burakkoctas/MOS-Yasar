@@ -1,10 +1,12 @@
 import { appConfig } from '@/src/config/appConfig';
 import {
   AttorneyDto,
-  AttorneyListDataDto,
   AttorneySubjectDto,
+  AttorneyListResponseDto,
+  AttorneySubjectsResponseDto,
   CreateAttorneyRequestDto,
-  MosApiWrapper,
+  CreateAttorneyResponseDto,
+  RevokeAttorneyResponseDto,
 } from '@/src/features/attorney/api/contracts';
 import { Attorney, AttorneySubject, CreateAttorneyPayload } from '@/src/features/attorney/types';
 import { createApiClient } from '@/src/shared/api/apiClient';
@@ -67,7 +69,7 @@ function authHeaders(): Record<string, string> {
 
 export const attorneyService: AttorneyService = {
   async getSubjects() {
-    const res = await apiClient.request<MosApiWrapper<AttorneySubjectDto[]>>(
+    const res = await apiClient.request<AttorneySubjectsResponseDto>(
       '/mos/api/v3/attorneySubjects',
       { headers: authHeaders() },
     );
@@ -76,7 +78,7 @@ export const attorneyService: AttorneyService = {
   },
 
   async getAttorneys() {
-    const res = await apiClient.request<MosApiWrapper<AttorneyListDataDto>>(
+    const res = await apiClient.request<AttorneyListResponseDto>(
       '/mos/api/v3/attorneyV2',
       { headers: authHeaders() },
     );
@@ -89,17 +91,18 @@ export const attorneyService: AttorneyService = {
   },
 
   async createAttorney(payload: CreateAttorneyPayload) {
-    const res = await apiClient.request<MosApiWrapper<AttorneyDto>>(
+    const res = await apiClient.request<CreateAttorneyResponseDto>(
       '/mos/api/v3/CreateAttorneyV2',
       { method: 'POST', body: mapCreatePayloadToDto(payload), headers: authHeaders() },
     );
     if (res.code !== 200) throw new Error(parseApiError(res.message));
-    return mapAttorneyDto(res.data!);
+    if (!res.data) throw new Error('Sunucu geçersiz yanıt döndürdü.');
+    return mapAttorneyDto(res.data);
   },
 
   async revokeAttorney(id: string) {
-    const encodedId = btoa(id);
-    const res = await apiClient.request<MosApiWrapper<null>>(
+    const encodedId = encodeURIComponent(btoa(id));
+    const res = await apiClient.request<RevokeAttorneyResponseDto>(
       `/mos/api/v3/DeleteAttorney/${encodedId}`,
       { headers: authHeaders() },
     );

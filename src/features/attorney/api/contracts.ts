@@ -2,7 +2,7 @@ export interface MosApiWrapper<T> {
   code: number;
   message: string | null;
   data: T | null;
-  dataList: T[] | null;
+  dataList: unknown;
   title: string | null;
 }
 
@@ -36,3 +36,8 @@ export interface CreateAttorneyRequestDto {
   allSubjects: boolean;
   allowedSubjectIds: number[] | null;
 }
+
+export type AttorneySubjectsResponseDto = MosApiWrapper<AttorneySubjectDto[]>;
+export type AttorneyListResponseDto = MosApiWrapper<AttorneyListDataDto>;
+export type CreateAttorneyResponseDto = MosApiWrapper<AttorneyDto>;
+export type RevokeAttorneyResponseDto = MosApiWrapper<null>;
