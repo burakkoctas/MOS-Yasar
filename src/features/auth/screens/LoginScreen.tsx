@@ -43,6 +43,7 @@ export default function LoginScreen() {
   const [forgotEmail, setForgotEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [activeButton, setActiveButton] = useState<'login' | 'signup'>('login');
 
   useEffect(() => {
     let isMounted = true;
@@ -322,24 +323,28 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity
+              <Pressable
                 style={[
                   styles.loginButton,
-                  isDark && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary, elevation: 0, shadowOpacity: 0 },
+                  isDark && { backgroundColor: 'transparent', elevation: 0, shadowOpacity: 0 },
+                  { borderColor: isDark && activeButton === 'login' ? colors.primary : 'transparent' },
                 ]}
+                onPressIn={() => setActiveButton('login')}
                 onPress={handleLogin}
-                activeOpacity={0.8}
               >
                 <Text style={[styles.loginButtonText, isDark && { color: colors.primary }]}>Giriş</Text>
-              </TouchableOpacity>
+              </Pressable>
 
-              <TouchableOpacity
-                style={styles.signupContainer}
+              <Pressable
+                style={[
+                  styles.signupContainer,
+                  { borderColor: isDark && activeButton === 'signup' ? colors.primary : 'transparent' },
+                ]}
+                onPressIn={() => setActiveButton('signup')}
                 onPress={() => router.push('/register')}
-                activeOpacity={0.7}
               >
                 <Text style={styles.signupText}>Üye Ol</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -509,6 +514,8 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     marginBottom: 20,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -516,7 +523,7 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
     elevation: 4,
   },
   loginButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
-  signupContainer: { alignItems: 'center', paddingVertical: 10 },
+  signupContainer: { alignItems: 'center', paddingVertical: 14, borderRadius: 25, backgroundColor: 'transparent', borderWidth: 1.5, borderColor: 'transparent' },
   signupText: { color: colors.primary, fontSize: 16, fontWeight: 'bold' },
   footer: {
     position: 'absolute',
