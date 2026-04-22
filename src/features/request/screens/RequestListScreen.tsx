@@ -6,6 +6,7 @@ import EntranceTransition from '@/src/shared/components/ui/EntranceTransition';
 import { isNetworkError } from '@/src/shared/api/apiClient';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
@@ -127,45 +128,52 @@ export default function RequestListScreen() {
           </EntranceTransition>
 
           <EntranceTransition delay={320} style={styles.listWrapper}>
-            <FilteredList
-              data={processedData}
-              selectedIds={selectedIds}
-              variant="request"
-              showSelection={canBulkApprove}
-              onSelect={(id, value) => {
-                setSelectedIds((prev) =>
-                  value
-                    ? Array.from(new Set([...prev, id]))
-                    : prev.filter((itemId) => itemId !== id),
-                );
-              }}
-              openCategory={activeCategoryTitle}
-              canSelectRequest={canSelectRequest}
-              onToggle={(categoryTitle) => {
-                setActiveCategoryTitle((prev) => {
-                  const closingCategory = prev === categoryTitle ? categoryTitle : prev;
-                  const closingCategoryIds = closingCategory
-                    ? (categoryRequestIds[closingCategory] ?? [])
-                    : [];
+            {processedData.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="checkmark-circle-outline" size={64} color="#9E9E9E" />
+                <Text style={styles.emptyText}>Bekleyen talebiniz bulunmuyor.</Text>
+              </View>
+            ) : (
+              <FilteredList
+                data={processedData}
+                selectedIds={selectedIds}
+                variant="request"
+                showSelection={canBulkApprove}
+                onSelect={(id, value) => {
+                  setSelectedIds((prev) =>
+                    value
+                      ? Array.from(new Set([...prev, id]))
+                      : prev.filter((itemId) => itemId !== id),
+                  );
+                }}
+                openCategory={activeCategoryTitle}
+                canSelectRequest={canSelectRequest}
+                onToggle={(categoryTitle) => {
+                  setActiveCategoryTitle((prev) => {
+                    const closingCategory = prev === categoryTitle ? categoryTitle : prev;
+                    const closingCategoryIds = closingCategory
+                      ? (categoryRequestIds[closingCategory] ?? [])
+                      : [];
 
-                  if (closingCategoryIds.length > 0) {
-                    setSelectedIds((currentSelectedIds) =>
-                      currentSelectedIds.filter(
-                        (selectedId) => !closingCategoryIds.includes(selectedId),
-                      ),
-                    );
-                  }
+                    if (closingCategoryIds.length > 0) {
+                      setSelectedIds((currentSelectedIds) =>
+                        currentSelectedIds.filter(
+                          (selectedId) => !closingCategoryIds.includes(selectedId),
+                        ),
+                      );
+                    }
 
-                  return prev === categoryTitle ? null : categoryTitle;
-                });
-              }}
-              onDetailsPress={(item) =>
-                router.push({
-                  pathname: '/request/[id]',
-                  params: { id: item.id, source: 'request' },
-                })
-              }
-            />
+                    return prev === categoryTitle ? null : categoryTitle;
+                  });
+                }}
+                onDetailsPress={(item) =>
+                  router.push({
+                    pathname: '/request/[id]',
+                    params: { id: item.id, source: 'request' },
+                  })
+                }
+              />
+            )}
           </EntranceTransition>
         </>
       )}
@@ -198,4 +206,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: '500', letterSpacing: 1 },
   spacingPlaceholder: { height: 23 },
   listWrapper: { flex: 1 },
+  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 },
+  emptyText: { marginTop: 16, fontSize: 15, color: '#9E9E9E', textAlign: 'center' },
 });

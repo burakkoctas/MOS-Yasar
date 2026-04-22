@@ -81,8 +81,8 @@ export default function ActiveDelegatesScreen() {
         renderItem={({ item }) => <DelegateCard delegate={item} onDelete={setPendingDeleteId} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="document-text-outline" size={60} color={colors.primary} />
-            <Text style={[styles.emptyText, { color: colors.primary }]}>
+            <Ionicons name="document-text-outline" size={64} color="#9E9E9E" />
+            <Text style={[styles.emptyText, { color: '#9E9E9E' }]}>
               Aktif vekaletiniz bulunmuyor.
             </Text>
           </View>

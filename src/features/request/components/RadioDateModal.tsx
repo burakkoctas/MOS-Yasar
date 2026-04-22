@@ -75,7 +75,7 @@ const createStyles = (colors: AppColors) => StyleSheet.create({
   modalContent: { width: '85%', maxHeight: '70%', backgroundColor: colors.surface, borderRadius: 25, padding: 25, elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 4 },
   modalTitle: { fontSize: 20, fontWeight: 'bold', color: colors.primary, marginBottom: 15, textAlign: 'left' },
   radioGroup: { marginBottom: 10 },
-  radioRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 15, borderBottomWidth: 0.5, borderBottomColor: colors.borderNavbar },
+  radioRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 15, borderBottomWidth: 0.5, borderBottomColor: colors.textPrimary },
   radioText: { fontSize: 16, color: colors.textBody },
   radioTextSelected: { color: colors.primary },
   radioCircle: { height: 22, width: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.borderRadio, alignItems: 'center', justifyContent: 'center' },

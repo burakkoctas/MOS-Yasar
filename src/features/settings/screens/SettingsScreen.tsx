@@ -2,8 +2,8 @@ import AppLoader from '@/src/shared/components/ui/AppLoader';
 import ConfirmModal from '@/src/shared/components/ui/ConfirmModal';
 import { AppColors } from '@/src/shared/theme/colors';
 import { useTheme } from '@/src/shared/theme/useTheme';
-import { ThemeMode } from '@/src/store/useThemeStore';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { ThemeMode } from '@/src/store/useThemeStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -100,7 +100,7 @@ export default function SettingsScreen() {
             </AnimatedItem>
 
             <AnimatedItem delay={350}>
-              <Text style={styles.sectionTitle}>Görünüm</Text>
+              <Text style={styles.sectionTitle}>Tema</Text>
               <View style={styles.themeSegment}>
                 {themeModes.map(({ key, label }) => (
                   <TouchableOpacity

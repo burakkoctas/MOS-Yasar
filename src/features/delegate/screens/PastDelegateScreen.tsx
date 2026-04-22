@@ -61,7 +61,8 @@ export default function PastDelegateScreen() {
         />
       ) : (
         <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: colors.textSystemGray }]}>Geçmiş vekalet kaydı bulunmamaktadır.</Text>
+          <Ionicons name="document-text-outline" size={64} color="#9E9E9E" />
+          <Text style={[styles.emptyText, { color: '#9E9E9E' }]}>Geçmiş vekalet kaydı bulunmamaktadır.</Text>
         </View>
       )}
 

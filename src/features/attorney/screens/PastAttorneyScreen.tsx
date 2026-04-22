@@ -58,7 +58,8 @@ export default function PastAttorneyScreen() {
         renderItem={({ item }) => <AttorneyCard attorney={item} showRevoke={false} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={[styles.emptyText, { color: colors.textSystemGray }]}>
+            <Ionicons name="document-text-outline" size={64} color="#9E9E9E" />
+            <Text style={[styles.emptyText, { color: '#9E9E9E' }]}>
               Geçmiş vekalet kaydı bulunmamaktadır.
             </Text>
           </View>

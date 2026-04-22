@@ -1,5 +1,6 @@
 import { isNetworkError } from '@/src/shared/api/apiClient';
 import { useTheme } from '@/src/shared/theme/useTheme';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
@@ -91,22 +92,29 @@ export default function RequestHistoryScreen() {
           </EntranceTransition>
 
           <EntranceTransition delay={320} style={styles.listWrapper}>
-            <FilteredList
-              data={allHistory}
-              openCategory={activeCategoryTitle}
-              onToggle={(categoryTitle) =>
-                setActiveCategoryTitle((prev) => (prev === categoryTitle ? null : categoryTitle))
-              }
-              onDetailsPress={(item) =>
-                router.push({
-                  pathname: '/request/[id]',
-                  params: { id: item.id, source: 'history' },
-                })
-              }
-              selectedIds={[]}
-              onSelect={() => {}}
-              variant="history"
-            />
+            {allHistory.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="document-text-outline" size={64} color="#9E9E9E" />
+                <Text style={styles.emptyText}>Geçmiş talep kaydı bulunmamaktadır.</Text>
+              </View>
+            ) : (
+              <FilteredList
+                data={allHistory}
+                openCategory={activeCategoryTitle}
+                onToggle={(categoryTitle) =>
+                  setActiveCategoryTitle((prev) => (prev === categoryTitle ? null : categoryTitle))
+                }
+                onDetailsPress={(item) =>
+                  router.push({
+                    pathname: '/request/[id]',
+                    params: { id: item.id, source: 'history' },
+                  })
+                }
+                selectedIds={[]}
+                onSelect={() => {}}
+                variant="history"
+              />
+            )}
           </EntranceTransition>
         </>
       )}
@@ -147,4 +155,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   listWrapper: { flex: 1 },
+  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 },
+  emptyText: { marginTop: 16, fontSize: 15, color: '#9E9E9E', textAlign: 'center' },
 });
