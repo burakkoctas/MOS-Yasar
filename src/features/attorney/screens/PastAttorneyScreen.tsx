@@ -1,4 +1,5 @@
 import AppLoader from '@/src/shared/components/ui/AppLoader';
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
@@ -10,6 +11,7 @@ import { Attorney } from '../types';
 
 export default function PastAttorneyScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
   const [attorneys, setAttorneys] = useState<Attorney[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,8 +22,8 @@ export default function PastAttorneyScreen() {
       const { history } = await attorneyService.getAttorneys();
       setAttorneys(history);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Veriler yüklenemedi.';
-      Alert.alert('Hata', message);
+      const message = error instanceof Error ? error.message : t.attorney.loadError;
+      Alert.alert(t.common.error, message);
     } finally {
       setIsLoading(false);
     }
@@ -34,7 +36,7 @@ export default function PastAttorneyScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          headerTitle: 'Geçmiş Vekaletlerim',
+          headerTitle: t.attorney.past,
           headerTitleAlign: 'center',
           headerShadowVisible: false,
           headerStyle: { backgroundColor: colors.background },
@@ -60,7 +62,7 @@ export default function PastAttorneyScreen() {
           <View style={styles.emptyContainer}>
             <Ionicons name="document-text-outline" size={64} color="#9E9E9E" />
             <Text style={[styles.emptyText, { color: '#9E9E9E' }]}>
-              Geçmiş vekalet kaydı bulunmamaktadır.
+              {t.attorney.noPast}
             </Text>
           </View>
         }

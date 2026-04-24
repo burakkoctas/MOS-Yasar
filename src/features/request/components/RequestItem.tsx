@@ -1,3 +1,4 @@
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
@@ -24,6 +25,7 @@ const RequestItem: React.FC<RequestItemProps> = ({
   compact = false,
 }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   if (!requestData) {
     return null;
@@ -44,7 +46,7 @@ const RequestItem: React.FC<RequestItemProps> = ({
       />
 
       <RequestCardInfo
-        senderName={requestData.gonderen || 'İsimsiz'}
+        senderName={requestData.gonderen || t.requests.noName}
         requestDate={requestData.baslangic || '-'}
         compact={compact}
       />

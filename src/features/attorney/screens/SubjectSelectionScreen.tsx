@@ -1,5 +1,6 @@
 import ConfirmModal from '@/src/shared/components/ui/ConfirmModal';
 import { AppColors } from '@/src/shared/theme/colors';
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
@@ -27,6 +28,7 @@ const AnimatedPill = ({ children, index }: { children: React.ReactNode; index: n
 
 export default function SubjectSelectionScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { availableSubjects, selectedSubjectIds, setSelectedSubjectIds } = useAttorney();
@@ -60,7 +62,7 @@ export default function SubjectSelectionScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          headerTitle: 'Konu Seç',
+          headerTitle: t.attorney.selectSubject,
           headerTitleAlign: 'center',
           headerTitleStyle: { color: colors.primary, fontWeight: 'normal', fontSize: 18 },
           headerStyle: { backgroundColor: colors.background },
@@ -72,7 +74,7 @@ export default function SubjectSelectionScreen() {
           ),
           headerRight: () => (
             <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 10 }}>
-              <Text style={styles.doneButtonText}>Bitti</Text>
+              <Text style={styles.doneButtonText}>{t.attorney.done}</Text>
             </TouchableOpacity>
           ),
         }}
@@ -106,10 +108,7 @@ export default function SubjectSelectionScreen() {
 
       <ConfirmModal
         visible={isWarningVisible}
-        title="Uyarı"
-        message="Yaptığınız değişiklikler kaybolacak. Emin misiniz?"
-        confirmText="EVET"
-        cancelText="HAYIR"
+        message={t.common.unsavedChanges}
         onCancel={() => setIsWarningVisible(false)}
         onConfirm={() => {
           setIsWarningVisible(false);

@@ -1,12 +1,14 @@
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 const ListHeader = () => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: colors.primary }]}>Talep Listesi</Text>
+      <Text style={[styles.title, { color: colors.primary }]}>{t.requests.listTitle}</Text>
     </View>
   );
 };

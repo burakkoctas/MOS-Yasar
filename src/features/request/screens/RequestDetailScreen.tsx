@@ -2,6 +2,7 @@ import ActionDrawer from '@/src/shared/components/ui/ActionDrawer';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import ConfirmModal from '@/src/shared/components/ui/ConfirmModal';
 import { AppColors } from '@/src/shared/theme/colors';
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import { isNetworkError } from '@/src/shared/api/apiClient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -149,6 +150,7 @@ function createPreviewHtml(fileName: string, base64Content: string) {
 
 export default function RequestDetailScreen() {
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -173,12 +175,12 @@ export default function RequestDetailScreen() {
       setRequest(nextRequest);
     } catch (error) {
       if (isNetworkError(error)) {
-        Alert.alert('Bağlantı Hatası', 'Sunucuya bağlanılamıyor.');
+        Alert.alert(t.common.connectionError, t.common.connectionErrorMessage);
       }
     } finally {
       setIsLoading(false);
     }
-  }, [id, source]);
+  }, [id, source, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -197,9 +199,9 @@ export default function RequestDetailScreen() {
       router.back();
     } catch (error) {
       if (isNetworkError(error)) {
-        Alert.alert('Bağlantı Hatası', 'Sunucuya bağlanılamıyor.');
+        Alert.alert(t.common.connectionError, t.common.connectionErrorMessage);
       } else {
-        Alert.alert('Hata', error instanceof Error ? error.message : 'İşlem gerçekleştirilemedi.');
+        Alert.alert(t.common.error, error instanceof Error ? error.message : t.common.actionFailed);
       }
     } finally {
       setIsLoading(false);
@@ -211,7 +213,7 @@ export default function RequestDetailScreen() {
       try {
         const cacheDirectory = FileSystem.cacheDirectory;
         if (!cacheDirectory) {
-          Alert.alert('Ek Açılamadı', 'Cihaz geçici dosya alanına erişemedi.');
+          Alert.alert(t.requests.attachmentError, t.requests.attachmentDeviceError);
           return;
         }
 
@@ -223,7 +225,7 @@ export default function RequestDetailScreen() {
           setActiveAttachmentId(attachment.id);
           const attachmentContent = await requestService.getAttachmentContent(attachment.id);
           if (!attachmentContent?.content) {
-            Alert.alert('Ek Açılamadı', 'Ek içeriği alınamadı.');
+            Alert.alert(t.requests.attachmentError, t.requests.attachmentContentError);
             return;
           }
           await FileSystem.writeAsStringAsync(fileUri, attachmentContent.content, {
@@ -262,7 +264,7 @@ export default function RequestDetailScreen() {
 
         const canShare = await Sharing.isAvailableAsync();
         if (!canShare) {
-          Alert.alert('Ek Açılamadı', 'Bu dosya türü uygulama içinde önizlenemedi.');
+          Alert.alert(t.requests.attachmentError, t.requests.attachmentPreviewUnsupported);
           return;
         }
         await Sharing.shareAsync(fileUri, {
@@ -271,7 +273,7 @@ export default function RequestDetailScreen() {
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Ek açılırken hata oluştu.';
-        Alert.alert('Ek Açılamadı', message);
+        Alert.alert(t.requests.attachmentError, message);
       } finally {
         setActiveAttachmentId(null);
       }
@@ -282,7 +284,7 @@ export default function RequestDetailScreen() {
   if (!request && !isLoading) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Talep detayı bulunamadı.</Text>
+        <Text style={styles.emptyText}>{t.requests.detailNotFound}</Text>
       </View>
     );
   }
@@ -290,7 +292,7 @@ export default function RequestDetailScreen() {
   return (
     <View style={styles.container}>
       <RequestDetailHeader
-        title="Talep Detay"
+        title={t.requests.detailTitle}
         topInset={insets.top}
         onBack={() => router.back()}
         onDelete={!isHistoryView ? () => setIsDeleteModalVisible(true) : undefined}
@@ -338,17 +340,17 @@ export default function RequestDetailScreen() {
               Belge No: {request.belgeNo ?? `BEL-${request.istekNo}`}
             </Text>
 
-            <RequestDetailSection title={request.kategori ?? 'Talep Bilgileri'}>
-              <RequestInfoRow label="İstek No" value={request.istekNo} />
-              <RequestInfoRow label="Şirket" value={request.sirket} />
-              <RequestInfoRow label="Statü" value={request.statu} />
-              <RequestInfoRow label="Açılış Tarihi" value={request.acilis ?? request.baslangic} />
-              <RequestInfoRow label="Bitiş Tarihi" value={request.bitis} />
-              <RequestInfoRow label="Modül" value={request.modul ?? 'SAP Workflow'} />
-              <RequestInfoRow label="Kategori" value={request.kategori ?? '-'} />
-              {request.approver ? <RequestInfoRow label="Onaylayan" value={request.approver} /> : null}
+            <RequestDetailSection title={request.kategori ?? t.requests.requestInfo}>
+              <RequestInfoRow label={t.requests.requestNo} value={request.istekNo} />
+              <RequestInfoRow label={t.requests.company} value={request.sirket} />
+              <RequestInfoRow label={t.requests.status} value={request.statu} />
+              <RequestInfoRow label={t.requests.startDate} value={request.acilis ?? request.baslangic} />
+              <RequestInfoRow label={t.requests.endDate} value={request.bitis} />
+              <RequestInfoRow label={t.requests.module} value={request.modul ?? 'SAP Workflow'} />
+              <RequestInfoRow label={t.requests.category} value={request.kategori ?? '-'} />
+              {request.approver ? <RequestInfoRow label={t.requests.approver} value={request.approver} /> : null}
               {request.responseDate ? (
-                <RequestInfoRow label="Yanıt Tarihi" value={request.responseDate} />
+                <RequestInfoRow label={t.requests.responseDate} value={request.responseDate} />
               ) : null}
             </RequestDetailSection>
 
@@ -371,24 +373,24 @@ export default function RequestDetailScreen() {
                 </RequestDetailSection>
               ))
             ) : (
-              <RequestDetailSection title="İstek Açıklaması">
+              <RequestDetailSection title={t.requests.requestDescription}>
                 <Text style={styles.descriptionText}>
-                  {request.aciklama ?? 'Açıklama bulunmuyor.'}
+                  {request.aciklama ?? t.requests.noDescription}
                 </Text>
               </RequestDetailSection>
             )}
 
-            <RequestDetailSection title="Kişiler">
-              <RequestInfoRow label="İstek Sahibi" value={request.gonderen} />
+            <RequestDetailSection title={t.requests.people}>
+              <RequestInfoRow label={t.requests.requester} value={request.gonderen} />
               {request.requesterUsername ? (
-                <RequestInfoRow label="Kullanıcı Adı" value={request.requesterUsername} />
+                <RequestInfoRow label={t.requests.username} value={request.requesterUsername} />
               ) : null}
-              <RequestInfoRow label="Şirket" value={request.sirket} />
-              <RequestInfoRow label="Onay Durumu" value={request.onayDurumu} />
+              <RequestInfoRow label={t.requests.company} value={request.sirket} />
+              <RequestInfoRow label={t.requests.approvalStatus} value={request.onayDurumu} />
             </RequestDetailSection>
 
             {request.attachments?.length ? (
-              <RequestDetailSection title="Ekler">
+              <RequestDetailSection title={t.requests.attachments}>
                 {request.attachments.map((attachment) => (
                   <Pressable
                     key={attachment.id}
@@ -405,7 +407,7 @@ export default function RequestDetailScreen() {
                       <Text style={styles.attachmentButtonText}>{attachment.name}</Text>
                     </View>
                     {activeAttachmentId === attachment.id ? (
-                      <Text style={styles.attachmentLoadingText}>Hazırlanıyor...</Text>
+                      <Text style={styles.attachmentLoadingText}>{t.common.loading}</Text>
                     ) : null}
                   </Pressable>
                 ))}
@@ -417,8 +419,7 @@ export default function RequestDetailScreen() {
             <>
               <ConfirmModal
                 visible={isDeleteModalVisible}
-                title="Uyarı"
-                message="İstek yalnızca bu cihazdaki listeden kaldırılacak. Talep oluşturan kişiye iletilmeyecektir."
+                message={t.requests.removeWarning}
                 onCancel={() => setIsDeleteModalVisible(false)}
                 onConfirm={() => {
                   setIsDeleteModalVisible(false);

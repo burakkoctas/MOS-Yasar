@@ -1,4 +1,5 @@
 import { useTheme } from '@/src/shared/theme/useTheme';
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
 import React, { ComponentProps } from 'react';
@@ -14,14 +15,15 @@ interface NavItem {
   path: '/' | '/past-requests' | '/settings';
 }
 
-const navItems: NavItem[] = [
-  { id: 'list', label: 'Talep Listesi', iconName: 'list-outline', path: '/' },
-  { id: 'past', label: 'Geçmiş Talepler', iconName: 'time-outline', path: '/past-requests' },
-  { id: 'settings', label: 'Ayarlar', iconName: 'settings-outline', path: '/settings' },
-];
-
 const MainBottomNavbar = () => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+
+  const navItems: NavItem[] = [
+    { id: 'list', label: t.nav.requestList, iconName: 'list-outline', path: '/' },
+    { id: 'past', label: t.nav.requestHistory, iconName: 'time-outline', path: '/past-requests' },
+    { id: 'settings', label: t.nav.settings, iconName: 'settings-outline', path: '/settings' },
+  ];
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();

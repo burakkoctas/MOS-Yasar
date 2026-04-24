@@ -4,6 +4,7 @@ import ActionDrawer from '@/src/shared/components/ui/ActionDrawer';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import EntranceTransition from '@/src/shared/components/ui/EntranceTransition';
 import { isNetworkError } from '@/src/shared/api/apiClient';
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +18,7 @@ import { CategoryGroup, RequestOperation } from '../types';
 
 export default function RequestListScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
   const { session } = useAuthStore();
   const [allRequests, setAllRequests] = useState<CategoryGroup[]>([]);
@@ -73,12 +75,12 @@ export default function RequestListScreen() {
     } catch (error) {
       setIsContentReady(true);
       if (isNetworkError(error)) {
-        Alert.alert('Bağlantı Hatası', 'Sunucuya bağlanılamıyor.');
+        Alert.alert(t.common.connectionError, t.common.connectionErrorMessage);
       }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -98,9 +100,9 @@ export default function RequestListScreen() {
       await fetchData();
     } catch (error) {
       if (isNetworkError(error)) {
-        Alert.alert('Bağlantı Hatası', 'Sunucuya bağlanılamıyor.');
+        Alert.alert(t.common.connectionError, t.common.connectionErrorMessage);
       } else {
-        Alert.alert('Hata', error instanceof Error ? error.message : 'İşlem gerçekleştirilemedi.');
+        Alert.alert(t.common.error, error instanceof Error ? error.message : t.common.actionFailed);
       }
     } finally {
       setIsLoading(false);
@@ -115,14 +117,14 @@ export default function RequestListScreen() {
             <RequestFilterBar
               onSearch={setSearchKeyword}
               onDatePress={() => setModalVisible(true)}
-              placeholder="Arama kriteri giriniz"
+              placeholder={t.requests.searchPlaceholder}
               value={searchKeyword}
             />
           </EntranceTransition>
 
           <EntranceTransition delay={220}>
             <View style={styles.headerContainer}>
-              <Text style={[styles.title, { color: colors.primary }]}>Talep Listesi</Text>
+              <Text style={[styles.title, { color: colors.primary }]}>{t.requests.listTitle}</Text>
               <View style={styles.spacingPlaceholder} />
             </View>
           </EntranceTransition>
@@ -131,7 +133,7 @@ export default function RequestListScreen() {
             {processedData.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <Ionicons name="checkmark-circle-outline" size={64} color="#9E9E9E" />
-                <Text style={styles.emptyText}>Bekleyen talebiniz bulunmuyor.</Text>
+                <Text style={styles.emptyText}>{t.requests.noRequests}</Text>
               </View>
             ) : (
               <FilteredList

@@ -1,3 +1,4 @@
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { AppColors } from '@/src/shared/theme/colors';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,26 +22,7 @@ type MarkedDateType = {
 
 type CalendarMode = 'calendar' | 'month' | 'year';
 
-const MONTH_NAMES = [
-  'Ocak',
-  'Şubat',
-  'Mart',
-  'Nisan',
-  'Mayıs',
-  'Haziran',
-  'Temmuz',
-  'Ağustos',
-  'Eylül',
-  'Ekim',
-  'Kasım',
-  'Aralık',
-];
-
-const QUICK_RANGES = [
-  { key: 'last3days', label: 'Son 3 Gün', days: 3 },
-  { key: 'lastWeek', label: 'Son 1 Hafta', days: 7 },
-  { key: 'last3weeks', label: 'Son 3 Hafta', days: 21 },
-];
+const QUICK_RANGE_DAYS = [3, 7, 21];
 
 function formatDateInput(value: string) {
   const digits = value.replace(/\D/g, '').slice(0, 8);
@@ -109,7 +91,15 @@ export default function DateRangePickerModal({
   onSave,
 }: DateRangePickerModalProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const MONTH_NAMES = t.months;
+  const QUICK_RANGES = [
+    { key: 'last3days', label: t.requests.last3Days, days: 3 },
+    { key: 'lastWeek', label: t.requests.last1Week, days: 7 },
+    { key: 'last3weeks', label: t.requests.last3Weeks, days: 21 },
+  ];
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
   const [startInput, setStartInput] = useState('');
@@ -306,7 +296,7 @@ export default function DateRangePickerModal({
             <Ionicons name="close" size={26} color={colors.textPrimary} />
           </Pressable>
 
-          <Text style={styles.headerTitle}>Tarih Aralığı</Text>
+          <Text style={styles.headerTitle}>{t.requests.dateRange}</Text>
 
           <Pressable
             onPress={handleSave}
@@ -326,7 +316,7 @@ export default function DateRangePickerModal({
             value={startInput}
             onChangeText={(value) => handleInputChange('start', value)}
             keyboardType="number-pad"
-            placeholder="Başlangıç"
+            placeholder={t.requests.start}
             placeholderTextColor={colors.textCalendarPlaceholder}
             style={styles.dateInput}
             maxLength={10}
@@ -340,7 +330,7 @@ export default function DateRangePickerModal({
             value={endInput}
             onChangeText={(value) => handleInputChange('end', value)}
             keyboardType="number-pad"
-            placeholder="Bitiş"
+            placeholder={t.requests.end}
             placeholderTextColor={colors.textCalendarPlaceholder}
             style={styles.dateInput}
             maxLength={10}

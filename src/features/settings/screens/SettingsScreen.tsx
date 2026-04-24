@@ -1,5 +1,6 @@
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import ConfirmModal from '@/src/shared/components/ui/ConfirmModal';
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { AppColors } from '@/src/shared/theme/colors';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import { useAuthStore } from '@/src/store/useAuthStore';
@@ -36,11 +37,12 @@ const AnimatedItem = ({
 
 export default function SettingsScreen() {
   const { colors, mode, setMode } = useTheme();
+  const { t, language, setLanguage } = useTranslation();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { session, clearSession } = useAuthStore();
-  const displayName = session?.user.fullName?.trim() || 'Demo Kullanıcı';
-  const organizationName = session?.user.company?.trim() || 'Yaşar Bilgi';
+  const displayName = session?.user.fullName?.trim() || t.settings.demoUser;
+  const organizationName = session?.user.company?.trim() || t.settings.demoCompany;
   const [isLoading, setIsLoading] = useState(false);
   const [isDataReady, setIsDataReady] = useState(false);
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
@@ -53,14 +55,22 @@ export default function SettingsScreen() {
   );
 
   const themeModes: { key: ThemeMode; label: string }[] = [
-    { key: 'light', label: 'Açık' },
-    { key: 'dark', label: 'Koyu' },
+    { key: 'light', label: t.settings.light },
+    { key: 'dark', label: t.settings.dark },
   ];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Ayarlar</Text>
+        <TouchableOpacity
+          style={styles.langBadge}
+          onPress={() => setLanguage(language === 'tr' ? 'en' : 'tr')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.langBadgeText}>{language.toUpperCase()}</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{t.settings.title}</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
       {isDataReady && (
@@ -71,7 +81,7 @@ export default function SettingsScreen() {
             contentContainerStyle={{ paddingBottom: 40 }}
           >
             <AnimatedItem delay={100}>
-              <Text style={styles.sectionTitle}>Profil</Text>
+              <Text style={styles.sectionTitle}>{t.settings.profile}</Text>
               <View style={styles.profileCard}>
                 <Text style={styles.userName}>{displayName}</Text>
                 <Text style={styles.companyName}>{organizationName}</Text>
@@ -79,13 +89,13 @@ export default function SettingsScreen() {
             </AnimatedItem>
 
             <AnimatedItem delay={250}>
-              <Text style={styles.sectionTitle}>Vekalet</Text>
+              <Text style={styles.sectionTitle}>{t.settings.delegation}</Text>
               <View style={styles.menuContainer}>
                 <Pressable
                   style={styles.menuItem}
                   onPress={() => router.push('/settings/active-attorneys')}
                 >
-                  <Text style={styles.menuText}>Aktif Vekaletlerim</Text>
+                  <Text style={styles.menuText}>{t.attorney.active}</Text>
                   <Ionicons name="chevron-forward" size={20} color={colors.textSystemGray} />
                 </Pressable>
 
@@ -93,14 +103,14 @@ export default function SettingsScreen() {
                   style={styles.menuItem}
                   onPress={() => router.push('/settings/past-attorneys')}
                 >
-                  <Text style={styles.menuText}>Geçmiş Vekaletlerim</Text>
+                  <Text style={styles.menuText}>{t.attorney.past}</Text>
                   <Ionicons name="chevron-forward" size={20} color={colors.textSystemGray} />
                 </Pressable>
               </View>
             </AnimatedItem>
 
             <AnimatedItem delay={350}>
-              <Text style={styles.sectionTitle}>Tema</Text>
+              <Text style={styles.sectionTitle}>{t.settings.theme}</Text>
               <View style={styles.themeSegment}>
                 {themeModes.map(({ key, label }) => (
                   <TouchableOpacity
@@ -125,7 +135,7 @@ export default function SettingsScreen() {
                 onPress={() => setIsLogoutModalVisible(true)}
                 style={({ pressed }) => [styles.logoutButton, { opacity: pressed ? 0.7 : 1 }]}
               >
-                <Text style={styles.logoutText}>Çıkış</Text>
+                <Text style={styles.logoutText}>{t.settings.logout}</Text>
               </Pressable>
             </View>
           </AnimatedItem>
@@ -134,10 +144,9 @@ export default function SettingsScreen() {
 
       <ConfirmModal
         visible={isLogoutModalVisible}
-        title="Uyarı"
-        message="Çıkış yapıyorsunuz."
-        confirmText="TAMAM"
-        cancelText="İPTAL"
+        message={t.settings.logoutMessage}
+        confirmText={t.settings.logoutConfirm}
+        cancelText={t.settings.logoutCancel}
         confirmTextColor="#D32F2F"
         onCancel={() => setIsLogoutModalVisible(false)}
         onConfirm={() => {
@@ -154,8 +163,11 @@ export default function SettingsScreen() {
 
 const createStyles = (colors: AppColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: { paddingVertical: 15, alignItems: 'center', backgroundColor: colors.background },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: colors.primary },
+  header: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, backgroundColor: colors.background },
+  headerTitle: { flex: 1, fontSize: 18, fontWeight: '600', color: colors.primary, textAlign: 'center' },
+  headerSpacer: { width: 72 },
+  langBadge: { width: 40, height: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, borderRadius: 8, borderWidth: 1, borderColor: colors.border, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.12, shadowRadius: 2 },
+  langBadgeText: { fontSize: 13, fontWeight: '700', color: colors.primary },
   content: { flex: 1, paddingHorizontal: 20 },
   sectionTitle: {
     fontSize: 14,

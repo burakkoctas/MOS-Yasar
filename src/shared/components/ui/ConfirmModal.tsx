@@ -1,3 +1,4 @@
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import React from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -15,15 +16,19 @@ interface ConfirmModalProps {
 
 export default function ConfirmModal({
   visible,
-  title = 'Uyarı',
+  title,
   message,
   onConfirm,
   onCancel,
-  confirmText = 'EVET',
-  cancelText = 'İPTAL',
+  confirmText,
+  cancelText,
   confirmTextColor,
 }: ConfirmModalProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const resolvedTitle = title ?? t.common.warning;
+  const resolvedConfirmText = confirmText ?? t.common.yes;
+  const resolvedCancelText = cancelText ?? t.common.cancel;
   const resolvedConfirmColor = confirmTextColor ?? colors.textHeading;
   const isTextMessage = typeof message === 'string' || typeof message === 'number';
 
@@ -31,7 +36,7 @@ export default function ConfirmModal({
     <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={onCancel}>
       <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
         <View style={[styles.modalView, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.modalTitle, { color: colors.textHeading }]}>{title}</Text>
+          <Text style={[styles.modalTitle, { color: colors.textHeading }]}>{resolvedTitle}</Text>
           {isTextMessage ? (
             <Text style={[styles.modalContentText, { color: colors.textHeading }]}>{message}</Text>
           ) : (
@@ -39,11 +44,11 @@ export default function ConfirmModal({
           )}
           <View style={[styles.modalButtonContainer, { borderTopColor: colors.borderLight }]}>
             <TouchableOpacity style={styles.modalButton} onPress={onCancel}>
-              <Text style={[styles.cancelButtonText, { color: colors.textHeading }]}>{cancelText}</Text>
+              <Text style={[styles.cancelButtonText, { color: colors.textHeading }]}>{resolvedCancelText}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.modalButton} onPress={onConfirm}>
               <Text style={[styles.confirmButtonText, { color: resolvedConfirmColor }]}>
-                {confirmText}
+                {resolvedConfirmText}
               </Text>
             </TouchableOpacity>
           </View>

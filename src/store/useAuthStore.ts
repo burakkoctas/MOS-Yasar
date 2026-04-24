@@ -58,6 +58,7 @@ export const authStore = {
     authState = { session: null, isLoading: false };
     emitChange();
     AsyncStorage.removeItem(SESSION_KEY);
+    AsyncStorage.removeItem('@mos/fcm_token');
   },
 };
 

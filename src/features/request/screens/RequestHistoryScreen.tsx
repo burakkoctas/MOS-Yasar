@@ -1,4 +1,5 @@
 import { isNetworkError } from '@/src/shared/api/apiClient';
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -29,6 +30,7 @@ function getDefaultDateRange() {
 
 export default function RequestHistoryScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
   const [allHistory, setAllHistory] = useState<CategoryGroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -61,7 +63,7 @@ export default function RequestHistoryScreen() {
     } catch (error) {
       setIsContentReady(true);
       if (isNetworkError(error)) {
-        Alert.alert('Bağlantı Hatası', 'Sunucuya bağlanılamıyor.');
+        Alert.alert(t.common.connectionError, t.common.connectionErrorMessage);
       }
     }
   }, []);
@@ -86,14 +88,14 @@ export default function RequestHistoryScreen() {
                 fetchHistory(dateRangeText, searchInputValue);
               }}
               onDatePress={() => setModalVisible(true)}
-              placeholder="Arama kriteri giriniz"
+              placeholder={t.requests.searchPlaceholder}
               value={searchInputValue}
             />
           </EntranceTransition>
 
           <EntranceTransition delay={220}>
             <View style={styles.headerContainer}>
-              <Text style={[styles.title, { color: colors.primary }]}>Geçmiş Talepler</Text>
+              <Text style={[styles.title, { color: colors.primary }]}>{t.requests.historyTitle}</Text>
               <Text style={[styles.subTitle, { color: colors.textPlaceholder }]}>{dateRangeText}</Text>
             </View>
           </EntranceTransition>
@@ -102,7 +104,7 @@ export default function RequestHistoryScreen() {
             {allHistory.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <Ionicons name="document-text-outline" size={64} color="#9E9E9E" />
-                <Text style={styles.emptyText}>Geçmiş talep kaydı bulunmamaktadır.</Text>
+                <Text style={styles.emptyText}>{t.requests.noHistory}</Text>
               </View>
             ) : (
               <FilteredList

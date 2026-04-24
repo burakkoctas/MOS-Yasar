@@ -1,3 +1,4 @@
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
@@ -16,9 +17,10 @@ export default function AttorneyCard({
   showRevoke = true,
 }: AttorneyCardProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const subjectsText = attorney.allSubjects
-    ? 'Tümü'
+    ? t.attorney.all
     : attorney.subjects.map((s) => s.name).join(', ') || '-';
 
   const InfoRow = ({ label, value }: { label: string; value: string }) => (
@@ -35,17 +37,17 @@ export default function AttorneyCard({
       <View style={styles.content}>
         <View style={styles.emailRow}>
           <View style={styles.emailLabelColumn}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Alıcı</Text>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>E-posta</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t.attorney.recipient}</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t.attorney.email}</Text>
           </View>
           <Text style={[styles.separator, { color: colors.textSecondary }]}>:</Text>
           <Text style={[styles.emailValue, { color: colors.textPrimary }]}>
             {attorney.receiverEmail}
           </Text>
         </View>
-        <InfoRow label="Başlangıç" value={attorney.startDate} />
-        <InfoRow label="Bitiş" value={attorney.endDate} />
-        <InfoRow label="Konular" value={subjectsText} />
+        <InfoRow label={t.attorney.start} value={attorney.startDate} />
+        <InfoRow label={t.attorney.end} value={attorney.endDate} />
+        <InfoRow label={t.attorney.subjects} value={subjectsText} />
       </View>
 
       {showRevoke && onRevoke && (

@@ -1,5 +1,6 @@
 import AppLoader from '@/src/shared/components/ui/AppLoader';
 import { AppColors } from '@/src/shared/theme/colors';
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -21,6 +22,7 @@ import { attorneyService } from '../services/attorneyService';
 
 export default function CreateAttorneyScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
   const {
     receiverEmail,
@@ -44,9 +46,9 @@ export default function CreateAttorneyScreen() {
 
   const validateEmail = (value: string) => {
     if (!value.trim()) {
-      setEmailError('E-posta adresi zorunludur.');
+      setEmailError(t.attorney.emailRequired);
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
-      setEmailError('Geçerli bir e-posta adresi girin.');
+      setEmailError(t.attorney.emailInvalid);
     } else {
       setEmailError(null);
     }
@@ -84,15 +86,15 @@ export default function CreateAttorneyScreen() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(receiverEmail.trim())) return;
 
     if (!startDate || !endDate) {
-      Alert.alert('Eksik Bilgi', 'Başlangıç ve bitiş tarihi seçin.');
+      Alert.alert(t.attorney.missingDate, t.attorney.missingDateMessage);
       return;
     }
     Alert.alert(
-      'Uyarı',
-      'Vekalet verdiğiniz kişinin gerekli yetki seviyesinde olduğunu onaylıyor musunuz?',
+      t.common.warning,
+      t.attorney.authConfirmMessage,
       [
-        { text: 'İptal', style: 'cancel' },
-        { text: 'Onayla', onPress: doSave },
+        { text: t.common.cancel, style: 'cancel' },
+        { text: t.common.confirm, onPress: doSave },
       ],
     );
   };

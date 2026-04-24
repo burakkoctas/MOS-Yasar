@@ -4,6 +4,7 @@ import {
   KEYCLOAK_BASE_URL,
   isRemoteAuthEnabled,
 } from '@/src/config/appConfig';
+import { registerForPushNotifications } from './notificationService';
 import {
   AuthUserDto,
   LoginRequestDto,
@@ -258,7 +259,9 @@ const remoteAuthService: AuthService = {
       throw error;
     }
 
-    return mapLoginResponseToSession(tokenResponse);
+    const session = mapLoginResponseToSession(tokenResponse);
+    registerForPushNotifications(session.accessToken).catch(() => {});
+    return session;
   },
 
   async register(payload: RegisterPayload): Promise<string | null> {

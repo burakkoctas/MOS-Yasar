@@ -1,3 +1,4 @@
+import { useTranslation } from '@/src/shared/i18n/useTranslation';
 import { AppColors } from '@/src/shared/theme/colors';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -15,6 +16,7 @@ export default function RadioDateModal({
   visible, currentSelection, availableDates = [], onClose, onApply
 }: RadioDateModalProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [tempSelected, setTempSelected] = useState(currentSelection);
 
@@ -33,7 +35,7 @@ export default function RadioDateModal({
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           
-          <Text style={styles.modalTitle}>İşlem Tarihleri</Text>
+          <Text style={styles.modalTitle}>{t.requests.operationDates}</Text>
 
           <ScrollView style={styles.radioGroup} showsVerticalScrollIndicator={false}>
             {options.map((date, index) => (
@@ -57,10 +59,10 @@ export default function RadioDateModal({
           {/* İPTAL VE TAMAM BUTONLARI */}
           <View style={styles.buttonRow}>
             <TouchableOpacity onPress={onClose} style={styles.btnAction}>
-              <Text style={styles.btnCancelText}>İptal</Text>
+              <Text style={styles.btnCancelText}>{t.common.cancel}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => onApply(tempSelected)} style={styles.btnAction}>
-              <Text style={styles.btnApplyText}>Tamam</Text>
+              <Text style={styles.btnApplyText}>{t.common.ok}</Text>
             </TouchableOpacity>
           </View>
 
