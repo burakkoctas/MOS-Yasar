@@ -40,6 +40,17 @@ export default function CreateAttorneyScreen() {
   const [showPicker, setShowPicker] = useState<'start' | 'end' | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  const validateEmail = (value: string) => {
+    if (!value.trim()) {
+      setEmailError('E-posta adresi zorunludur.');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+      setEmailError('Geçerli bir e-posta adresi girin.');
+    } else {
+      setEmailError(null);
+    }
+  };
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const selectedSubjectNames = useMemo(
@@ -69,10 +80,9 @@ export default function CreateAttorneyScreen() {
     date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   const handleSave = () => {
-    if (!receiverEmail.trim()) {
-      Alert.alert('Eksik Bilgi', 'Alıcı e-posta adresini girin.');
-      return;
-    }
+    validateEmail(receiverEmail);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(receiverEmail.trim())) return;
+
     if (!startDate || !endDate) {
       Alert.alert('Eksik Bilgi', 'Başlangıç ve bitiş tarihi seçin.');
       return;
@@ -135,14 +145,20 @@ export default function CreateAttorneyScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Alıcı E-Posta</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, emailError ? styles.inputError : null]}
             placeholder="E-posta adresi giriniz"
             placeholderTextColor={colors.textDisabled}
             value={receiverEmail}
-            onChangeText={setReceiverEmail}
+            onChangeText={(text) => {
+              setReceiverEmail(text);
+              if (emailError) validateEmail(text);
+            }}
+            onBlur={() => validateEmail(receiverEmail)}
             keyboardType="email-address"
             autoCapitalize="none"
+            autoCorrect={false}
           />
+          <Text style={styles.errorText}>{emailError ?? ''}</Text>
         </View>
 
         <Text style={[styles.label, { marginBottom: 15 }]}>Tarih Aralığı</Text>
@@ -235,6 +251,8 @@ const createStyles = (colors: AppColors) =>
     label: { fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 },
     inputGroup: { marginBottom: 25 },
     input: { backgroundColor: colors.surfaceInput, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 15, fontSize: 16, color: colors.textPrimary },
+    inputError: { borderColor: '#E53935' },
+    errorText: { marginTop: 6, fontSize: 13, color: '#E53935' },
     dateContainer: { flexDirection: 'row', gap: 12, marginBottom: 25 },
     dateInput: { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.surfaceInput, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 10, height: 55 },
     dateText: { flex: 1, fontSize: 13, color: colors.textPrimary, fontWeight: '500', marginRight: 8 },

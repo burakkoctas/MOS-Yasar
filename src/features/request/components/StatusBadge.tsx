@@ -21,7 +21,7 @@ export default function StatusBadge({
     if (backgroundColor || textColor) {
       return {
         bg: isDark ? 'transparent' : (backgroundColor ?? colors.statusDefaultBg),
-        border: isDark ? (backgroundColor ?? colors.border) : 'transparent',
+        border: isDark ? (textColor ?? colors.statusDefaultText) : 'transparent',
         text: textColor ?? colors.statusDefaultText,
       };
     }
@@ -34,7 +34,11 @@ export default function StatusBadge({
       case 'reddedildi':
         return { bg: colors.statusRejectedBg, border: 'transparent', text: colors.statusRejectedText };
       default:
-        return { bg: colors.statusDefaultBg, border: 'transparent', text: colors.statusDefaultText };
+        return {
+          bg: 'transparent',
+          border: isDark ? '#FFFFFF' : 'transparent',
+          text: isDark ? '#FFFFFF' : colors.statusDefaultText,
+        };
     }
   };
 

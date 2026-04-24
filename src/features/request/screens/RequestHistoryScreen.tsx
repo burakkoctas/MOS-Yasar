@@ -2,7 +2,7 @@ import { isNetworkError } from '@/src/shared/api/apiClient';
 import { useTheme } from '@/src/shared/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import DateRangePickerModal from '@/src/features/request/components/DateRangePickerModal';
 import AppLoader from '@/src/shared/components/ui/AppLoader';
@@ -39,6 +39,15 @@ export default function RequestHistoryScreen() {
   const [searchInputValue, setSearchInputValue] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
 
+  // isContentReady render + native commit sonrasında loader'ı kapatır.
+  // Bu sayede loader kapandığında içerik zaten mount edilmiş ve
+  // EntranceTransition animasyonları başlamış olur — boş ekran yaşanmaz.
+  useEffect(() => {
+    if (isContentReady) {
+      setIsLoading(false);
+    }
+  }, [isContentReady]);
+
   const fetchHistory = useCallback(async (rangeText: string, nextSearchValue = '') => {
     setIsContentReady(false);
     setIsLoading(true);
@@ -54,8 +63,6 @@ export default function RequestHistoryScreen() {
       if (isNetworkError(error)) {
         Alert.alert('Bağlantı Hatası', 'Sunucuya bağlanılamıyor.');
       }
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 

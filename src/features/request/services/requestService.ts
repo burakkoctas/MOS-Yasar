@@ -353,6 +353,17 @@ function mapRemoteRequestToDomain(item: RemoteRequestItemDto): RequestItem {
   };
 }
 
+function resolveStatusColorsFromOperations(
+  operations: { statusCode: number; backgroundColor: string; textColor: string }[],
+  status: number | undefined,
+) {
+  const matched = operations?.find((op) => op.statusCode === status);
+  if (matched?.backgroundColor && matched?.textColor) {
+    return { backgroundColor: matched.backgroundColor, textColor: matched.textColor };
+  }
+  return mapResolvedStatusCodeToColors(status);
+}
+
 function mapRemoteHistoryRequestToDomain(item: RemoteRequestHistoryItemDto): RequestItem {
   const descriptionLines = getDescriptionLines(item.description);
   const company =
@@ -369,7 +380,7 @@ function mapRemoteHistoryRequestToDomain(item: RemoteRequestHistoryItemDto): Req
     parseDescriptionValue(descriptionLines, ['Aktivite Bitis Tarihi', 'Bitis Tarihi']) ?? '-';
   const moduleName = parseDescriptionValue(descriptionLines, ['Modul']) ?? item.subject;
   const categoryName = parseDescriptionValue(descriptionLines, ['Kategori']) ?? item.subject;
-  const statusColors = mapResolvedStatusCodeToColors(item.status);
+  const statusColors = resolveStatusColorsFromOperations(item.operations, item.status);
 
   return {
     id: item.requestId,
@@ -492,7 +503,7 @@ function mapRemoteRequestDetailToDomain(detail: RemoteRequestDetailDataDto): Req
     descriptionRequirement: detail.descriptionRequirement,
     approvalRequiresDescription: detail.approvalRequiresDescription,
   };
-  const statusColors = mapResolvedStatusCodeToColors(detail.status);
+  const statusColors = resolveStatusColorsFromOperations(detail.operations, detail.status);
 
   return {
     id: detail.requestId,

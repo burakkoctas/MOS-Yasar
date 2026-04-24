@@ -309,16 +309,20 @@ export default function RequestDetailScreen() {
             <View
               style={[
                 styles.statusBar,
-                request.statusBackgroundColor && {
-                  backgroundColor: isDark ? 'transparent' : request.statusBackgroundColor,
-                  borderColor: isDark ? request.statusBackgroundColor : 'transparent',
+                {
+                  backgroundColor: isDark || !request.statusBackgroundColor
+                    ? 'transparent'
+                    : request.statusBackgroundColor,
+                  borderColor: request.statusTextColor
+                    ? (isDark ? request.statusTextColor : 'transparent')
+                    : (isDark ? '#FFFFFF' : colors.border),
                 },
               ]}
             >
               <Text
                 style={[
                   styles.statusText,
-                  request.statusTextColor && { color: request.statusTextColor },
+                  { color: request.statusTextColor ?? (isDark ? '#FFFFFF' : colors.textPrimary) },
                 ]}
               >
                 {request.statusLabel || request.statu}
